@@ -165,3 +165,4 @@ __pycache__
 tags
 *.logs
 *.bak
+Marlin/Marlin.code-workspace
