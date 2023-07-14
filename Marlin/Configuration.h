@@ -1576,7 +1576,7 @@
  */
 // #define NOZZLE_TO_PROBE_OFFSET { -42.50, -18.80, -0.840 }  // Direct Extruder + CR-Touch
 // #define NOZZLE_TO_PROBE_OFFSET { -25, -42, -2.670 }  // Sprite Extruder Pro + CR-Touch
-#define NOZZLE_TO_PROBE_OFFSET { -25.000, -42.000, -3.200 }  // Sprite Extruder Pro + CR-Touch
+#define NOZZLE_TO_PROBE_OFFSET { -25.000, -42.000, -3.100 }  // Sprite Extruder Pro + CR-Touch
 
 // Enable and set to use a specific tool for probing. Disable to allow any tool.
 #define PROBING_TOOL 0
