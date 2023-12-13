@@ -880,11 +880,14 @@ void MMU2::filament_runout() {
       if (present && !mmu2s_triggered) {
         DEBUG_ECHOLNPGM("MMU <= 'A'");
         MMU2_SEND("A");
-      }
-      // Slowly spin the extruder during C0
-      else {
-        while (planner.movesplanned() < 3)
-          unscaled_mmu2_e_move(0.25, MMM_TO_MMS(120), false);
+      } else {
+        while (planner.movesplanned() < 3) {
+          // do nothing here as the previous implementation of
+          // "keep slowly spinning during C0" causes a huge amount of
+          // filament to be extruded and causing catastrophic/unrecoverable
+          // issues...
+          idle();
+        }
       }
     }
     mmu2s_triggered = present;
