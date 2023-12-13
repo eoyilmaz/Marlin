@@ -36,13 +36,14 @@
 inline void action_mmu2_load_to_nozzle(const uint8_t tool) {
   ui.return_to_status();
   ui.status_printf(0, GET_TEXT_F(MSG_MMU2_LOADING_FILAMENT), int(tool + 1));
-  if (mmu2.load_to_nozzle(tool)) ui.reset_status();
+  mmu2.load_to_nozzle(tool);
+  ui.reset_status();
 }
 
-void _mmu2_load_to_feeder(const uint8_t index) {
+void _mmu2_load_to_feeder(const uint8_t tool) {
   ui.return_to_status();
-  ui.status_printf(0, GET_TEXT_F(MSG_MMU2_LOADING_FILAMENT), int(index + 1));
-  mmu2.load_to_feeder(index);
+  ui.status_printf(0, GET_TEXT_F(MSG_MMU2_LOADING_FILAMENT), int(tool + 1));
+  mmu2.load_to_feeder(tool);
   ui.reset_status();
 }
 
