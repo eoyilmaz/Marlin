@@ -585,8 +585,10 @@
 #define PRUSA_MMU1             1
 #define PRUSA_MMU2             2
 #define PRUSA_MMU2S            3
+#define PRUSA_MMU3             4
 #define EXTENDABLE_EMU_MMU2   12
 #define EXTENDABLE_EMU_MMU2S  13
+#define EXTENDABLE_EMU_MMU3   13
 
 #ifdef MMU_MODEL
   #define HAS_MMU 1
@@ -597,6 +599,10 @@
   #elif MMU_MODEL % 10 == PRUSA_MMU2S
     #define HAS_PRUSA_MMU2 1
     #define HAS_PRUSA_MMU2S 1
+  #elif MMU_MODEL % 10 == PRUSA_MMU3
+    #define HAS_PRUSA_MMU2 1
+    #define HAS_PRUSA_MMU2S 1
+    #define HAS_PRUSA_MMU3 1
   #endif
   #if MMU_MODEL >= EXTENDABLE_EMU_MMU2
     #define HAS_EXTENDABLE_MMU 1
@@ -606,6 +612,7 @@
 #undef PRUSA_MMU1
 #undef PRUSA_MMU2
 #undef PRUSA_MMU2S
+#undef PRUSA_MMU3
 #undef EXTENDABLE_EMU_MMU2
 #undef EXTENDABLE_EMU_MMU2S
 
