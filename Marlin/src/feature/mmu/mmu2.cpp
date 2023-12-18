@@ -38,6 +38,8 @@ MMU2 mmu2;
 #include "../../module/stepper.h"
 #include "../../MarlinCore.h"
 
+#include "protocol.h"
+
 #if ENABLED(HOST_PROMPT_SUPPORT)
   #include "../../feature/host_actions.h"
 #endif
@@ -75,6 +77,9 @@ MMU2 mmu2;
 
 #define MMU2_NO_TOOL 99
 #define MMU_BAUD    115200
+
+/// Global instance of the protocol codec
+static mp::Protocol protocol;
 
 bool MMU2::_enabled, MMU2::ready;
 #if HAS_PRUSA_MMU2S
@@ -153,7 +158,7 @@ void MMU2::mmu_loop() {
     case 0: break;
 
     case -1:
-      if (rx_start()) {
+      if (rx_query_last_command_result()) {
         prev_P0_request = millis();   // Initialize finda sensor timeout
         DEBUG_ECHOLNPGM("MMU => 'start'");
         DEBUG_ECHOLNPGM("MMU <= 'S1'");
@@ -270,7 +275,7 @@ void MMU2::mmu_loop() {
         }
 
         last_cmd = cmd;
-        cmd = MMU_CMD_NONE;
+        cmd = protocol::RequestMsgCodes.unknown;
       }
       else if (ELAPSED(millis(), prev_P0_request + 300)) {
         MMU2_SEND("P0");  // Read FINDA
@@ -352,6 +357,16 @@ bool MMU2::rx_start() {
   // check for start message
   return MMU2_RECV("start");
 }
+
+
+/**
+ * Check if MMU was started
+*/
+bool MMU2::rx_query_last_command_result() {
+  // check for query result after X0
+  return MMU2_RECV("X0 F0");
+}
+
 
 /**
  * Check if the data received ends with the given string.
@@ -435,6 +450,14 @@ bool MMU2::rx_ok() {
   }
   return false;
 }
+
+/**
+ * Check if the given command is accepted
+*/
+// bool MMU2::rx_command_accepted(const char * base_command) {
+//   if (MMU2_RECV(" A"))
+// }
+
 
 /**
  * Check if MMU has compatible firmware

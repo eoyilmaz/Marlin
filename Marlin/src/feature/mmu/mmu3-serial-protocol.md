@@ -1,32 +1,32 @@
 MMU3 Messages
 =============
 
-Starting with the version 2 of the MMU firmware, the requests and responds have
-a trailing section that contains the CRC8 of the original message. The general
-structure is as follows:
+Starting with the version 2.0.19 of the MMU firmware, the requests and responds
+have a trailing section that contains the CRC8 of the original message. The
+general structure is as follows:
 
 ```shell
 Requests (what Marlin requests):
-Marlin: {RequestMsgCode}{Value}*{CRC8}
+Marlin: {RequestMsgCode}{Value}*{CRC8}\n
 
 Responses (what MMU responds with):
-MMU   : {RequestMsgCode}{Value} {ResponseMsgParamCode}{paramValue}*{CRC8}
+MMU   : {RequestMsgCode}{Value} {ResponseMsgParamCode}{paramValue}*{CRC8}\n
 ```
 
 An example to that would be:
 
 ```shell
-Marlin: S0*c6
-MMU   : S0 A3*22
+Marlin: S0*c6\n
+MMU   : S0 A3*22\n
 
-Marlin: S1*ad
-MMU   : S1 A0*34
+Marlin: S1*ad\n
+MMU   : S1 A0*34\n
 
-Marlin: S2*10
-MMU   : S2 A2*65
-
-# All combined we have a response of v3.0.2 as the firmware version.
+Marlin: S2*10\n
+MMU   : S2 A2*65\n
 ```
+
+All combined we have a response of v3.0.2 as the firmware version.
 
 Startup sequence
 ================
@@ -48,80 +48,140 @@ Marlin: S0*c6\n
 When the communication is in place MMU follows with:
 
 ```shell
-MMU   : S0 A3*22
+MMU   : S0 A3*22\n
 ```
 
 Then Marlin continues to get the rest of the MMU firmware version.
 
 ```shell
-Marlin: S1*ad
-MMU   : S1 A0*34
-Marlin: S2*10
-MMU   : S2 A2*65
+Marlin: S1*ad\n
+MMU   : S1 A0*34\n
+Marlin: S2*10\n
+MMU   : S2 A2*65\n
 ```
 
-#if (12V_mode)
+Setting the mode to SpreadCycle (M0) or StealthChop (M1)
 
-- MMU <= 'M1\n'
-- MMU => 'ok\n'
+```shell
+Marlin: M1*{CRC8};
+MMU   : ---nothing---
+```
 
 #endif
 
-- MMU <= 'P0\n'
-- MMU => '*FINDA status*\n'
+```shell
+Marlin: P0
+MMU   : P0 A{FINDA status}*{CRC8}\n
+```
 
-Now we are sure MMU is available and ready. If there was a timeout or other communication problem somewhere, printer will be killed.
+Now we are sure MMU is available and ready. If there was a timeout or other
+communication problem somewhere, printer will not be killed this would be
+stupid, the MMU feature will be disabled.
 
-- *Firmware version* is an integer value, but we don't care about it
-- *Build number* is an integer value and has to be >=126, or =>132 if 12V mode is enabled
-- *FINDA status* is 1 if the filament is loaded to the extruder, 0 otherwise
+- *Firmware version* is an integer value, and we care about it. As there is no
+  otherway of knowing which protocol to use.
+- *FINDA status* is 1 if the filament is loaded to the extruder, 0 otherwise.
 
-
-*Build number* is checked against the required value, if it does not match, printer is halted.
-
+*Firmware version* is checked against the required value, if it does not match,
+printer will not be halted, only the MMU feature will be disabled.
 
 
 Toolchange
 ==========
 
-- MMU <= 'T*Filament index*\n'
+```shell
+Marlin: T{Filament index}*{CRC8}\n
+Marlin: Q0*ea\n
+```
 
 MMU sends
 
-- MMU => 'ok\n'
+```shell
+MMU   : T{filament index}*P{ProgressCode}{CRC8}\n
+```
 
-as soon as the filament is fed down to the extruder. We follow with
+Which in normal operation would be as follows, let's say that we requested MMU
+to load `T0``:
 
-- MMU <= 'C0\n'
+```shell
+Marlin: T0*{CRC8}\n
 
-MMU will feed a few more millimeters of filament for the extruder gears to grab.
-When done, the MMU sends
+Marlin: Q0*{CRC8}\n
+MMU   : T0*P5{CRC8}\n  # P5 => FeedingToFinda
 
-- MMU => 'ok\n'
+Marlin: Q0*{CRC8}\n
+MMU   : T0*P7{CRC8}\n  # P7 => FeedingToNozzle
+```
 
-We don't wait for a response here but immediately continue with the next G-code which should
-be one or more extruder moves to feed the filament into the hotend.
+as soon as the filament is fed down to the extruder. We follow with:
+
+```shell
+Marlin: C0*{CRC8}\n
+```
+
+MMU will feed a few more millimeters of filament for the extruder gears to
+grab. When done, the MMU sends
+
+```shell
+Marlin: Q0*{CRC8}\n
+MMU   : T0*P9{CRC8}\n  # P9 => FinishingMoves
+```
+
+After the `T0*P9` response we immediately continue with the next G-code which
+should be one or more extruder moves to feed the filament into the hotend.
 
 
 FINDA status
 ============
 
-- MMU <= 'P0\n'
-- MMU => '*FINDA status*\n'
+```shell
+Marlin: P0*{CRC8}\n
+```
 
-*FINDA status* is 1 if the is filament loaded to the extruder, 0 otherwise. This could be used as filament runout sensor if probed regularly.
+If the filament is loaded to the extruder, FINDA status is 1 and MMU responds
+with:
 
+```shell
+MMU   : P0 A1*{CRC8}\n
+```
+
+otherwise:
+
+```shell
+MMU   : P0 A0*7b\n
+```
+
+This could be used as filament runout sensor if probed regularly.
 
 
 Load filament
 =============
 
-- MMU <= 'L*Filament index*\n'
+To load a filament to the MMU itself, we run:
 
-MMU will feed filament down to the extruder, when done
+```shell
+Marlin: L{Filament index}*{CRC8}\n
+MMU   : L{Filament index} A1*{CRC8}\n
+```
 
-- MMU => 'ok\n'
+and immediately after that we query the status:
 
+```shell
+Marlin: Q0*{CRC8}\n
+```
+
+MMU will respond with status messages:
+
+```shell
+MMU   : L0*P5{CRC8}\n
+```
+
+MMU will load the filament and when done:
+
+```shell
+Marlin: Q0*{CRC8}\n
+MMU   : L0*P9{CRC8}\n
+```
 
 Unload filament
 =============

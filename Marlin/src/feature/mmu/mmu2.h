@@ -63,7 +63,9 @@ private:
   static void clear_rx_buffer();
 
   static bool rx_ok();
+  static bool rx_command_accepted(const char *base_command);
   static bool rx_start();
+  static bool rx_query_last_command_result();
   static void check_version(const uint16_t buildnr);
 
   static void command(const uint8_t cmd);
