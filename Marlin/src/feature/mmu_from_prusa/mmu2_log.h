@@ -28,10 +28,10 @@ void LogEchoEvent_P(const char *msg_P);
     #ifdef __AVR__
         #include "Marlin.h"
     #else
-        #include "../../core/serial.h"
+        #include "src/core/serial.h"
     #endif
     #define SERIAL_MMU2() \
-        { serialprintPGM(mmu2Magic); }
+        { SERIAL_ECHO_P(mmu2Magic); }
 
     #define MMU2_ECHO_MSGLN(S)   \
         do {                     \
@@ -44,7 +44,7 @@ void LogEchoEvent_P(const char *msg_P);
         do {                     \
             SERIAL_ECHO_START;   \
             SERIAL_MMU2();       \
-            SERIAL_ECHORPGM(S);  \
+            SERIAL_ECHO_P(S);  \
         } while (0)
     #define MMU2_ERROR_MSGRPGM(S) MMU2_ECHO_MSGRPGM(S) //!@todo Decide MMU errors  on serial line
     #define MMU2_ECHO_MSG(S)     \

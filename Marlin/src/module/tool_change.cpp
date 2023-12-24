@@ -74,10 +74,12 @@
   #include "../feature/fanmux.h"
 #endif
 
-#if HAS_PRUSA_MMU1
-  #include "../feature/mmu/mmu.h"
+#if HAS_PRUSA_MMU3
+  #include "../feature/mmu_from_prusa/mmu2.h"
 #elif HAS_PRUSA_MMU2
   #include "../feature/mmu/mmu2.h"
+#elif HAS_PRUSA_MMU1
+  #include "../feature/mmu/mmu.h"
 #endif
 
 #if HAS_MARLINUI_MENU

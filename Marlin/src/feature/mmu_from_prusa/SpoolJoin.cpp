@@ -1,8 +1,8 @@
 #include "SpoolJoin.h"
-#include "Marlin.h"
+#include "src/MarlinCore.h"
 #include "eeprom.h"
 #include "messages.h"
-#include "language.h"
+#include "src/core/language.h"
 
 namespace SpoolJoin {
 
@@ -17,32 +17,38 @@ void SpoolJoin::initSpoolJoinStatus()
 {
     // Useful information to see during bootup
     SERIAL_ECHOPGM("SpoolJoin is ");
-    uint8_t status = eeprom_init_default_byte((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Disabled);
+    // uint8_t status = eeprom_init_default_byte((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Disabled);
+    // TODO: I need help with this...
+    // uint8_t status = persistentStore.read_data((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Disabled);
+    uint8_t status = 1;
     if (status == (uint8_t)EEPROM::Enabled)
     {
-        SERIAL_ECHOLNRPGM(_O(MSG_ON));
+        SERIAL_ECHOLN_P(MSG_ON + 2);
     } else {
-        SERIAL_ECHOLNRPGM(_O(MSG_OFF));
+        SERIAL_ECHOLN_P(MSG_OFF + 2);
     }
 }
 
 void SpoolJoin::toggleSpoolJoin()
 {
-    if (eeprom_read_byte((uint8_t*)EEPROM_SPOOL_JOIN) == (uint8_t)EEPROM::Disabled)
-    {
-        eeprom_write_byte((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Enabled);
-    } else {
-        eeprom_write_byte((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Disabled);
-    }
+    // TODO: This uses persistentStore, I need guidance on this
+    // if (eeprom_read_byte((uint8_t*)EEPROM_SPOOL_JOIN) == (uint8_t)EEPROM::Disabled)
+    // {
+    //     eeprom_write_byte((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Enabled);
+    // } else {
+    //     eeprom_write_byte((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Disabled);
+    // }
 }
 
 bool SpoolJoin::isSpoolJoinEnabled()
 {
-    if(eeprom_read_byte((uint8_t*)EEPROM_SPOOL_JOIN) == (uint8_t)EEPROM::Enabled) {
-        return true;
-    } else {
-        return false;
-    }
+    // TODO: This uses persistentStore, I need guidance on this
+    // if(eeprom_read_byte((uint8_t*)EEPROM_SPOOL_JOIN) == (uint8_t)EEPROM::Enabled) {
+    //     return true;
+    // } else {
+    //     return false;
+    // }
+    return true;
 }
 
 void SpoolJoin::setSlot(uint8_t slot)

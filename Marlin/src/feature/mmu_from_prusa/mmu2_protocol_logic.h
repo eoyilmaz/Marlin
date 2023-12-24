@@ -1,4 +1,8 @@
+/**
+ * 
+*/
 #pragma once
+
 #include <stdint.h>
 #include <avr/pgmspace.h>
 
@@ -28,21 +32,20 @@ public:
 #else
 
     #include <array>
-    #include "../../../../../../Prusa-Firmware-MMU/src/logic/error_codes.h"
-    #include "../../../../../../Prusa-Firmware-MMU/src/logic/progress_codes.h"
+    #include "mmu2/error_codes.h"
+    #include "mmu2/progress_codes.h"
 
     // prevent ARM HAL macros from breaking our code
     #undef CRC
-    #include "../../../../../../Prusa-Firmware-MMU/src/modules/protocol.h"
-    #include "buttons.h"
+    #include "mmu2_protocol.h"
+    #include "mmu2/buttons.h"
     #include "registers.h"
 #endif
-
-#include "mmu2_serial.h"
 
 /// New MMU2 protocol logic
 namespace MMU2 {
 
+// @TODO: use the MMU2_C0_RETRY or combine it with MAX_RETRIES
 static constexpr uint8_t MAX_RETRIES = 3U;
 
 using namespace modules::protocol;
@@ -95,7 +98,7 @@ private:
 /// Logic layer of the MMU vs. printer communication protocol
 class ProtocolLogic {
 public:
-    ProtocolLogic(MMU2Serial *uart, uint8_t extraLoadDistance, uint8_t pulleySlowFeedrate);
+    ProtocolLogic(uint8_t extraLoadDistance, uint8_t pulleySlowFeedrate);
 
     /// Start/Enable communication with the MMU
     void Start();
@@ -358,8 +361,6 @@ private:
 
     std::array<uint8_t, 16> lastReceivedBytes; ///< remembers the last few bytes of incoming communication for diagnostic purposes
     uint8_t lrb;
-
-    MMU2Serial *uart;          ///< UART interface
 
     ErrorCode errorCode;       ///< last received error code from the MMU
     ProgressCode progressCode; ///< last received progress code from the MMU

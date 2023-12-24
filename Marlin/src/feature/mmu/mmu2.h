@@ -94,7 +94,9 @@ private:
 
   static bool _enabled, ready;
 
-  static uint8_t cmd, cmd_arg, last_cmd, extruder;
+  // static uint8_t cmd, cmd_arg, last_cmd, extruder;
+  static uint8_t extruder;
+  static modules::protocol::RequestMsg rq;
   static int8_t state;
   static volatile int8_t finda;
   static volatile bool finda_runout_valid;

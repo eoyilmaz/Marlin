@@ -5,9 +5,8 @@
     #include "mmu2/buttons.h"
     #include "mmu2/error_codes.h"
 #else
-    #include "buttons.h"
-    #include "../../../../../../Prusa-Error-Codes/04_MMU/button_operations.h"
-    #include "../../../../../../Prusa-Firmware-MMU/src/logic/error_codes.h"
+    #include "mmu2/buttons.h"
+    #include "mmu2/error_codes.h"
 #endif
 
 namespace MMU2 {

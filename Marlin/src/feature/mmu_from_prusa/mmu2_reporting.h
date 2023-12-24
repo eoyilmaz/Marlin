@@ -2,13 +2,8 @@
 
 #pragma once
 #include <stdint.h>
-#ifdef __AVR__
-    #include "mmu2/error_codes.h"
-    #include "mmu2/progress_codes.h"
-#else
-    #include "../../../../../../Prusa-Firmware-MMU/src/logic/error_codes.h"
-    #include "../../../../../../Prusa-Firmware-MMU/src/logic/progress_codes.h"
-#endif
+#include "mmu2/error_codes.h"
+#include "mmu2/progress_codes.h"
 
 namespace MMU2 {
 

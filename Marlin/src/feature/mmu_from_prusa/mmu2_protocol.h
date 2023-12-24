@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include "mmu2_crc.h"
 
+// prevent ARM HAL macros from breaking our code
+#undef CRC
+
 namespace modules {
 
 /// @brief The MMU communication protocol implementation and related stuff.
@@ -12,34 +15,34 @@ namespace protocol {
 
 /// Definition of request message codes
 enum class RequestMsgCodes : uint8_t {
-    unknown = 0,
-    Query = 'Q',
-    Tool = 'T',
-    Load = 'L',
-    Mode = 'M',
-    Unload = 'U',
-    Reset = 'X',
-    Finda = 'P',
-    Version = 'S',
-    Button = 'B',
-    Eject = 'E',
-    Write = 'W',
-    Cut = 'K',
-    FilamentType = 'F',
+    unknown        =   0,
+    Query          = 'Q',
+    Tool           = 'T',
+    Load           = 'L',
+    Mode           = 'M',
+    Unload         = 'U',
+    Reset          = 'X',
+    Finda          = 'P',
+    Version        = 'S',
+    Button         = 'B',
+    Eject          = 'E',
+    Write          = 'W',
+    Cut            = 'K',
+    FilamentType   = 'F',
     FilamentSensor = 'f',
-    Home = 'H',
-    Read = 'R'
+    Home           = 'H',
+    Read           = 'R'
 };
 
 /// Definition of response message parameter codes
 enum class ResponseMsgParamCodes : uint8_t {
-    unknown = 0,
+    unknown    =   0,
     Processing = 'P',
-    Error = 'E',
-    Finished = 'F',
-    Accepted = 'A',
-    Rejected = 'R',
-    Button = 'B' // the MMU registered a button press and is sending it to the printer for processing
+    Error      = 'E',
+    Finished   = 'F',
+    Accepted   = 'A',
+    Rejected   = 'R',
+    Button     = 'B' // the MMU registered a button press and is sending it to the printer for processing
 };
 
 /// A request message - requests are being sent by the printer into the MMU.
@@ -78,8 +81,7 @@ struct RequestMsg {
         : code(code)
         , value(address)
         , value2(value)
-        , crc8(ComputeCRC8()) {
-    }
+        , crc8(ComputeCRC8()) {}
 
     constexpr uint8_t CRC() const { return crc8; }
 };
@@ -179,12 +181,12 @@ public:
     /// @returns number of bytes written into txbuff
     static uint8_t EncodeResponseReadFINDA(const RequestMsg &msg, uint8_t findaValue, uint8_t *txbuff);
 
-
-
-
-
-
-
+    /// Encode response to Version query
+    /// @param msg source request message for this response
+    /// @param value version number (0-255)
+    /// @param txbuff where to format the message
+    /// @returns number of bytes written into txbuff
+    static uint8_t EncodeResponseVersion(const RequestMsg &msg, uint16_t value, uint8_t *txbuff);
 
     /// Encode response to Query operation status
     /// @param msg source request message for this response

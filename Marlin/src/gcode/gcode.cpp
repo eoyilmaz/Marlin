@@ -969,6 +969,15 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 702: M702(); break;                                  // M702: Unload Filament
       #endif
 
+      #if HAS_PRUSA_MMU3
+        case 704: M704(); break;                                  // M704: Preload to MMU
+        case 705: M705(); break;                                  // M705: Eject filament
+        case 706: M706(); break;                                  // M706: Cut filament
+        case 707: M707(); break;                                  // M707: Read from MMU register
+        case 708: M708(); break;                                  // M708: Write to MMU register
+        case 709: M709(); break;                                  // M709: MMU power & reset
+      #endif
+
       #if ENABLED(CONTROLLER_FAN_EDITABLE)
         case 710: M710(); break;                                  // M710: Set Controller Fan settings
       #endif

@@ -9,7 +9,7 @@
 typedef float feedRate_t;
 
 #else
-    #include "protocol_logic.h"
+    #include "mmu2_protocol_logic.h"
     // #include <atomic>
 #endif
 
@@ -346,7 +346,7 @@ private:
     uint8_t extruder;             ///< currently active slot in the MMU ... somewhat... not sure where to get it from yet
     uint8_t tool_change_extruder; ///< only used for UI purposes
 
-    pos3d resume_position;
+    xyz_pos_t resume_position;
     int16_t resume_hotend_temp;
 
     ProgressCode lastProgressCode = ProgressCode::OK;

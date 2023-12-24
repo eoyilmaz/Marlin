@@ -1,3 +1,9 @@
+#include "src/MarlinCore.h"
+#include "src/module/motion.h"
+#include "src/gcode/queue.h"
+#if HAS_FILAMENT_SENSOR
+  #include "src/feature/runout.h"
+#endif
 #include "mmu2.h"
 #include "mmu2_config.h"
 #include "mmu2_error_converter.h"
@@ -13,7 +19,7 @@
 #include "SpoolJoin.h"
 
 #include "messages.h"
-#include "language.h"
+#include "src/core/language.h"
 
 #ifdef __AVR__
 // As of FW 3.12 we only support building the FW with only one extruder, all the multi-extruder infrastructure will be removed.
@@ -41,7 +47,7 @@ void WaitForHotendTargetTempBeep() {
 MMU2 mmu2;
 
 MMU2::MMU2()
-    : logic(&mmu2Serial, MMU2_TOOL_CHANGE_LOAD_LENGTH, MMU2_LOAD_TO_NOZZLE_FEED_RATE)
+    : logic(MMU2_TOOL_CHANGE_LOAD_LENGTH, MMU2_LOAD_TO_NOZZLE_FEED_RATE)
     , extruder(MMU2_NO_TOOL)
     , tool_change_extruder(MMU2_NO_TOOL)
     , resume_position()
@@ -58,19 +64,21 @@ MMU2::MMU2()
 void MMU2::Status() {
     // Useful information to see during bootup and change state
     SERIAL_ECHOPGM("MMU is ");
-    uint8_t status = eeprom_init_default_byte((uint8_t*)EEPROM_MMU_ENABLED, 0);
+    // uint8_t status = eeprom_init_default_byte((uint8_t*)EEPROM_MMU_ENABLED, 0);
+    // TODO: we need to query the data from PersistentStore
+    uint8_t status = 1;
     if (status == 1) {
-        SERIAL_ECHOLNRPGM(_O(MSG_ON));
+        SERIAL_ECHOLN_P(_O(MSG_ON));
     } else {
-        SERIAL_ECHOLNRPGM(_O(MSG_OFF));
+        SERIAL_ECHOLN_P(_O(MSG_OFF));
     }
 }
 
 void MMU2::Start() {
-    mmu2Serial.begin(MMU_BAUD);
+    MMU2_SERIAL.begin(MMU_BAUD);
 
     PowerOn();
-    mmu2Serial.flush(); // make sure the UART buffer is clear before starting communication
+    MMU2_SERIAL.flush(); // make sure the UART buffer is clear before starting communication
 
     SetCurrentTool(MMU2_NO_TOOL);
     state = xState::Connecting;
@@ -89,7 +97,7 @@ void MMU2::Stop() {
 void MMU2::StopKeepPowered() {
     state = xState::Stopped;
     logic.Stop();
-    mmu2Serial.close();
+    MMU2_SERIAL.end();
 }
 
 void MMU2::Tune() {
@@ -188,9 +196,11 @@ bool __attribute__((noinline)) MMU2::WriteRegister(uint8_t address, uint16_t dat
 }
 
 void MMU2::mmu_loop() {
-    // We only leave this method if the current command was successfully completed - that's the Marlin's way of blocking operation
-    // Atomic compare_exchange would have been the most appropriate solution here, but this gets called only in Marlin's task,
-    // so thread safety should be kept
+    // We only leave this method if the current command was successfully
+    // completed - that's the Marlin's way of blocking operation
+    // Atomic compare_exchange would have been the most appropriate solution
+    // here, but this gets called only in Marlin's task, so thread safety
+    // should be kept
     static bool avoidRecursion = false;
     if (avoidRecursion)
         return;
@@ -208,14 +218,25 @@ void __attribute__((noinline)) MMU2::mmu_loop_inner(bool reportErrors) {
 
 void MMU2::CheckFINDARunout() {
     // Check for FINDA filament runout
-    if (!FindaDetectsFilament() && check_fsensor()) {
-        SERIAL_ECHOLNPGM("FINDA filament runout!");
+    if (!FindaDetectsFilament()
+        && printJobOngoing()
+        && !printingIsPaused()
+        // && !saved_printing
+        #if HAS_LEVELING
+            && !leveling_is_valid()
+        #endif
+        && !all_axes_trusted()
+        && axis_is_trusted(AxisEnum::E_AXIS)) {
+        SERIAL_ECHOLN_P("FINDA filament runout!");
         marlin_stop_and_save_print_to_ram();
-        restore_print_from_ram_and_continue(0);
+        // TODO: I don't see a comparable function in Marlin
+        // restore_print_from_ram_and_continue(0);
         if (SpoolJoin::spooljoin.isSpoolJoinEnabled() && get_current_tool() != (uint8_t)FILAMENT_UNKNOWN){ // Can't auto if F=?
-            enquecommand_front_P(PSTR("M600 AUTO")); // save print and run M600 command
+            // enquecommand_front_P(PSTR("M600 AUTO")); // save print and run M600 command
+            queue.enqueue_now_P(PSTR("M600 AUTO"));  // save print and run M600 command
         } else {
-            enquecommand_front_P(MSG_M600); // save print and run M600 command
+            // enquecommand_front_P(MSG_M600); // save print and run M600 command
+            queue.enqueue_now_P(MSG_M600);// save print and run M600 command
         }
     }
 }
@@ -249,7 +270,7 @@ bool MMU2::RetryIfPossible(ErrorCode ec) {
         // check, that Retry is actually allowed on that operation
         if (ButtonAvailable(ec) != Buttons::NoButton) {
             logic.SetInAutoRetry(true);
-            SERIAL_ECHOLNPGM("RetryButtonPressed");
+            SERIAL_ECHOLN_P("RetryButtonPressed");
             // We don't decrement until the button is acknowledged by the MMU.
             //--retryAttempts; // "used" one retry attempt
             return true;
@@ -377,7 +398,8 @@ bool MMU2::tool_change(uint8_t slot) {
         }
 
         ReportingRAII rep(CommandInProgress::ToolChange);
-        FSensorBlockRunout blockRunout;
+        // FSensorBlockRunout blockRunout;
+        runout.reset();
         planner_synchronize();
         ToolChangeCommon(slot);
     }
@@ -393,7 +415,8 @@ bool MMU2::tool_change(char code, uint8_t slot) {
     if (!WaitForMMUReady())
         return false;
 
-    FSensorBlockRunout blockRunout;
+    // FSensorBlockRunout blockRunout;
+    runout.reset();
 
     switch (code) {
     case '?': {
@@ -453,7 +476,8 @@ bool MMU2::set_filament_type(uint8_t /*slot*/, uint8_t /*type*/) {
 }
 
 void MMU2::UnloadInner() {
-    FSensorBlockRunout blockRunout;
+    // FSensorBlockRunout blockRunout;
+    runout.reset();
     filament_ramming();
 
     // we assume the printer managed to relieve filament tip from the gears,
@@ -557,7 +581,8 @@ bool MMU2::load_filament_to_nozzle(uint8_t slot) {
     {
         // used for MMU-menu operation "Load to Nozzle"
         ReportingRAII rep(CommandInProgress::ToolChange);
-        FSensorBlockRunout blockRunout;
+        // FSensorBlockRunout blockRunout;
+        runout.reset();
 
         if (extruder != MMU2_NO_TOOL) { // we already have some filament loaded - free it + shape its tip properly
             filament_ramming();
@@ -637,7 +662,8 @@ void MMU2::SaveAndPark(bool move_axes) {
             resume_position = planner_current_position(); // save current pos
 
             // lift Z
-            move_raise_z(MMU_ERR_Z_PAUSE_LIFT);
+            constexpr xyz_pos_t park_point = NOZZLE_PARK_POINT;
+            move_raise_z(park_point.z);
 
             // move XY aside
             if (all_axes_homed()) {
@@ -678,10 +704,10 @@ void MMU2::ResumeUnpark() {
         LogEchoEvent_P(PSTR("Resuming XYZ"));
 
         // Move XY to starting position, then Z
-        motion_do_blocking_move_to_xy(resume_position.xyz[0], resume_position.xyz[1], feedRate_t(NOZZLE_PARK_XY_FEEDRATE));
+        motion_do_blocking_move_to_xy(resume_position.x, resume_position.x, feedRate_t(NOZZLE_PARK_XY_FEEDRATE));
 
         // Move Z_AXIS to saved position
-        motion_do_blocking_move_to_z(resume_position.xyz[2], feedRate_t(NOZZLE_PARK_Z_FEEDRATE));
+        motion_do_blocking_move_to_z(resume_position.z, feedRate_t(NOZZLE_PARK_Z_FEEDRATE));
 
         // From this point forward, power panic should not use
         // the partial backup in RAM since the extruder is no
@@ -773,7 +799,8 @@ bool MMU2::manage_response(const bool move_axes, const bool turn_off_nozzle) {
 
     MARLIN_KEEPALIVE_STATE_IN_PROCESS;
 
-    LongTimer nozzleTimeout;
+    // LongTimer nozzleTimeout;
+    Stopwatch nozzle_timer;
 
     for (;;) {
         // in our new implementation, we know the exact state of the MMU at any moment, we do not have to wait for a timeout
@@ -784,17 +811,22 @@ bool MMU2::manage_response(const bool move_axes, const bool turn_off_nozzle) {
         safe_delay_keep_alive(0); // calls LogicStep() and remembers its return status
 
         if (mmu_print_saved & SavedState::CooldownPending) {
-            if (!nozzleTimeout.running()) {
-                nozzleTimeout.start();
+            // if (!nozzle_timer.running()) {
+            if (!nozzle_timer.isRunning()) {
+                nozzle_timer.start();
                 LogEchoEvent_P(PSTR("Cooling Timeout started"));
-            } else if (nozzleTimeout.expired(DEFAULT_SAFETYTIMER_TIME_MINS * 60 * 1000ul)) { // mins->msec.
+
+            // TODO: The following is exactly the same feature with PAUSE_PARK_NOZZLE_TIMEOUT which is in seconds
+            // } else if (nozzle_timer.expired(DEFAULT_SAFETYTIMER_TIME_MINS * 60 * 1000ul)) { // mins->msec.
+            } else if (nozzle_timer.duration() > (PAUSE_PARK_NOZZLE_TIMEOUT * 1000ul)) { // mins->msec.
                 mmu_print_saved &= ~(SavedState::CooldownPending);
                 mmu_print_saved |= SavedState::Cooldown;
                 thermal_setTargetHotend(0);
                 LogEchoEvent_P(PSTR("Heater cooldown"));
             }
-        } else if (nozzleTimeout.running()) {
-            nozzleTimeout.stop();
+        // } else if (nozzle_timer.running()) {
+        } else if (nozzle_timer.isRunning()) {
+            nozzle_timer.stop();
             LogEchoEvent_P(PSTR("Cooling timer stopped"));
         }
 

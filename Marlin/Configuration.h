@@ -386,7 +386,7 @@
  * See additional options in Configuration_adv.h.
  * :["PRUSA_MMU1", "PRUSA_MMU2", "PRUSA_MMU2S", "EXTENDABLE_EMU_MMU2", "EXTENDABLE_EMU_MMU2S"]
  */
-#define MMU_MODEL PRUSA_MMU2S
+#define MMU_MODEL PRUSA_MMU3
 
 // @section psu control
 

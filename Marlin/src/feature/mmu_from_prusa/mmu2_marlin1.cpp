@@ -70,8 +70,9 @@ void planner_set_current_position_E(float e){
         current_position[E_AXIS] = e;
 }
 
-pos3d planner_current_position(){
-    return pos3d(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS]);
+xyz_pos_t planner_current_position(){
+    // return pos3d(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS]);
+    return xyz_pos_t(current_position);
 }
 
 void motion_do_blocking_move_to_xy(float rx, float ry, float feedRate_mm_s){

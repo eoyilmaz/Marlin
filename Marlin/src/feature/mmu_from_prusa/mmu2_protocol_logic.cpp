@@ -12,7 +12,7 @@
     #ifdef UNITTEST
         #define strncmp_P strncmp
     #else
-        #include <Marlin/src/core/serial.h>
+        #include "../../core/serial.h"
     #endif
 #endif
 
@@ -164,7 +164,7 @@ StepStatus ProtocolLogic::ExpectingMessage() {
     OldMMUFWDetector oldMMUh4x0r; // old MMU FW hacker ;)
 
     // try to consume as many rx bytes as possible (until a message has been completed)
-    while ((c = uart->read()) >= 0) {
+    while ((c = MMU2_SERIAL.read()) >= 0) {
         ++bytesConsumed;
         RecordReceivedByte(c);
         switch (protocol.DecodeResponse(c)) {
@@ -208,7 +208,7 @@ void ProtocolLogic::SendMsg(RequestMsg rq) {
     uint8_t txbuff[Protocol::MaxRequestSize()];
 #endif
     uint8_t len = Protocol::EncodeRequest(rq, txbuff);
-    uart->write(txbuff, len);
+    MMU2_SERIAL.write(txbuff, len);
     LogRequestMsg(txbuff, len);
     RecordUARTActivity();
 }
@@ -220,7 +220,7 @@ void ProtocolLogic::SendWriteMsg(RequestMsg rq) {
     uint8_t txbuff[Protocol::MaxRequestSize()];
 #endif
     uint8_t len = Protocol::EncodeWriteRequest(rq.value, rq.value2, txbuff);
-    uart->write(txbuff, len);
+    MMU2_SERIAL.write(txbuff, len);
     LogRequestMsg(txbuff, len);
     RecordUARTActivity();
 }
@@ -334,7 +334,7 @@ StepStatus ProtocolLogic::StartSeqStep() {
 
 StepStatus ProtocolLogic::DelayedRestartWait() {
     if (Elapsed(heartBeatPeriod)) { // this basically means, that we are waiting until there is some traffic on
-        while (uart->read() != -1)
+        while (MMU2_SERIAL.read() != -1)
             ;                       // clear the input buffer
         // switch to StartSeq
         Start();
@@ -535,7 +535,7 @@ StepStatus ProtocolLogic::IdleStep() {
     return Finished;
 }
 
-ProtocolLogic::ProtocolLogic(MMU2Serial *uart, uint8_t extraLoadDistance, uint8_t pulleySlowFeedrate)
+ProtocolLogic::ProtocolLogic(uint8_t extraLoadDistance, uint8_t pulleySlowFeedrate)
     : explicitPrinterError(ErrorCode::OK)
     , currentScope(Scope::Stopped)
     , scopeState(ScopeState::Ready)
@@ -545,7 +545,6 @@ ProtocolLogic::ProtocolLogic(MMU2Serial *uart, uint8_t extraLoadDistance, uint8_
     , rsp(RequestMsg(RequestMsgCodes::unknown, 0), ResponseMsgParamCodes::unknown, 0)
     , state(State::Stopped)
     , lrb(0)
-    , uart(uart)
     , errorCode(ErrorCode::OK)
     , progressCode(ProgressCode::OK)
     , buttonCode(Buttons::NoButton)
@@ -782,14 +781,14 @@ StepStatus ProtocolLogic::SuppressShortDropOuts(const char *msg_P, StepStatus ss
 }
 
 StepStatus ProtocolLogic::HandleCommunicationTimeout() {
-    uart->flush(); // clear the output buffer
+    MMU2_SERIAL.flush(); // clear the output buffer
     protocol.ResetResponseDecoder();
     Start();
     return SuppressShortDropOuts(PSTR("Communication timeout"), CommunicationTimeout);
 }
 
 StepStatus ProtocolLogic::HandleProtocolError() {
-    uart->flush(); // clear the output buffer
+    MMU2_SERIAL.flush(); // clear the output buffer
     state = State::InitSequence;
     currentScope = Scope::DelayedRestart;
     DelayedRestartRestart();
