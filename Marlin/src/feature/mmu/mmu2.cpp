@@ -38,9 +38,6 @@ MMU2 mmu2;
 #include "../../module/stepper.h"
 #include "../../MarlinCore.h"
 
-#include "../mmu_from_prusa/mmu2_protocol.h"
-#include "../mmu_from_prusa/mmu2_protocol_logic.h"
-
 #if ENABLED(HOST_PROMPT_SUPPORT)
   #include "../../feature/host_actions.h"
 #endif
@@ -65,34 +62,25 @@ MMU2 mmu2;
   static bool mmu_loading_flag = false;
 #endif
 
-// #define MMU_CMD_NONE 0
-// #define MMU_CMD_T0   0x10  // up to supported filaments
-// #define MMU_CMD_L0   0x20  // up to supported filaments
-// #define MMU_CMD_C0   0x30
-// #define MMU_CMD_U0   0x40
-// #define MMU_CMD_E0   0x50  // up to supported filaments
-// #define MMU_CMD_R0   0x60
-// #define MMU_CMD_F0   0x70  // up to supported filaments
-// #define MMU_CMD_K0   0x80  // up to supported filaments
+#define MMU_CMD_NONE 0
+#define MMU_CMD_T0   0x10  // up to supported filaments
+#define MMU_CMD_L0   0x20  // up to supported filaments
+#define MMU_CMD_C0   0x30
+#define MMU_CMD_U0   0x40
+#define MMU_CMD_E0   0x50  // up to supported filaments
+#define MMU_CMD_R0   0x60
+#define MMU_CMD_F0   0x70  // up to supported filaments
 
 #define MMU_REQUIRED_FW_BUILDNR TERN(MMU2_MODE_12V, 132, 126)
 
-#define MMU2_NO_TOOL -1
+#define MMU2_NO_TOOL 99
 #define MMU_BAUD    115200
-
-/// Global instance of the protocol codec
-static mp::Protocol protocol;
 
 bool MMU2::_enabled, MMU2::ready;
 #if HAS_PRUSA_MMU2S
   bool MMU2::mmu2s_triggered;
 #endif
-// uint8_t MMU2::cmd, MMU2::cmd_arg, MMU2::last_cmd, MMU2::extruder;
-mp::RequestMsg MMU2::rq(
-  mp::RequestMsgCodes::Reset,
-  0
-);
-
+uint8_t MMU2::cmd, MMU2::cmd_arg, MMU2::last_cmd, MMU2::extruder;
 int8_t MMU2::state = 0;
 volatile int8_t MMU2::finda = 1;
 volatile bool MMU2::finda_runout_valid;
@@ -144,7 +132,7 @@ void MMU2::reset() {
   #endif
 }
 
-int8_t MMU2::get_current_tool() { return extruder; }
+int8_t MMU2::get_current_tool() { return extruder == MMU2_NO_TOOL ? -1 : extruder; }
 
 #if ANY(HAS_PRUSA_MMU2S, MMU_EXTRUDER_SENSOR)
   #define FILAMENT_PRESENT() (READ(FIL_RUNOUT1_PIN) != FIL_RUNOUT1_STATE)
@@ -165,7 +153,7 @@ void MMU2::mmu_loop() {
     case 0: break;
 
     case -1:
-      if (rx_query_last_command_result()) {
+      if (rx_start()) {
         prev_P0_request = millis();   // Initialize finda sensor timeout
         DEBUG_ECHOLNPGM("MMU => 'start'");
         DEBUG_ECHOLNPGM("MMU <= 'S1'");
@@ -232,15 +220,12 @@ void MMU2::mmu_loop() {
       break;
 
     case 1:
-      if (rq.code == mp::RequestMsgCodes::Tool) {
-        if (WITHIN(rq.value, 0, EXTRUDERS)) {
+      if (cmd) {
+        if (WITHIN(cmd, MMU_CMD_T0, MMU_CMD_T0 + EXTRUDERS - 1)) {
           // tool change
-          // const int filament = cmd - MMU_CMD_T0;
-          DEBUG_ECHOLNPGM("MMU <= T", rq.value);
-          // tx_printf(F("T%d\n"), rq.value);
-          ProtocolLogic::LoadFilament(rq.value)
-
-
+          const int filament = cmd - MMU_CMD_T0;
+          DEBUG_ECHOLNPGM("MMU <= T", filament);
+          tx_printf(F("T%d\n"), filament);
           TERN_(MMU_EXTRUDER_SENSOR, mmu_idl_sens = 1); // enable idler sensor, if any
           state = 3; // wait for response
         }
@@ -285,7 +270,7 @@ void MMU2::mmu_loop() {
         }
 
         last_cmd = cmd;
-        cmd = protocol::RequestMsgCodes.unknown;
+        cmd = MMU_CMD_NONE;
       }
       else if (ELAPSED(millis(), prev_P0_request + 300)) {
         MMU2_SEND("P0");  // Read FINDA
@@ -367,16 +352,6 @@ bool MMU2::rx_start() {
   // check for start message
   return MMU2_RECV("start");
 }
-
-
-/**
- * Check if MMU was started
-*/
-bool MMU2::rx_query_last_command_result() {
-  // check for query result after X0
-  return MMU2_RECV("X0 F0");
-}
-
 
 /**
  * Check if the data received ends with the given string.
@@ -462,14 +437,6 @@ bool MMU2::rx_ok() {
 }
 
 /**
- * Check if the given command is accepted
-*/
-// bool MMU2::rx_command_accepted(const char * base_command) {
-//   if (MMU2_RECV(" A"))
-// }
-
-
-/**
  * Check if MMU has compatible firmware
  */
 void MMU2::check_version(const uint16_t buildnr) {
@@ -507,8 +474,6 @@ inline void beep_bad_cmd() { BUZZ(400, 40); }
       check_filament();
     }
     const bool success = mmu2s_triggered && can_load();
-    // try to cut the filament
-    if (!success) command(MMU_CMD_K0 + index)
     if (!success) mmu2_not_responding();
     return success;
   }
