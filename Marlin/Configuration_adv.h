@@ -4320,7 +4320,7 @@
   //#define E_MUX0_PIN 40  // Always Required
   //#define E_MUX1_PIN 42  // Needed for 3 to 8 inputs
   //#define E_MUX2_PIN 44  // Needed for 5 to 8 inputs
-#elif HAS_PRUSA_MMU2
+#elif HAS_PRUSA_MMU2 || HAS_PRUSA_MMU3
   // Serial port used for communication with MMU2.
   #define MMU2_SERIAL_PORT 1
 
@@ -4363,7 +4363,7 @@
    * This mode requires a MK3S extruder with a sensor at the extruder idler, like the MMU2S.
    * See https://help.prusa3d.com/guide/3b-mk3s-mk2-5s-extruder-upgrade_41560#42048, step 11
    */
-  #if HAS_PRUSA_MMU2S
+  #if HAS_PRUSA_MMU2S || HAS_PRUSA_MMU3
     #define MMU2_C0_RETRY   5             // Number of retries (total time = timeout*retries)
 
   /**
@@ -4418,7 +4418,7 @@
 
   #define MMU2_DEBUG  // Write debug info to serial output
 
-#endif // HAS_PRUSA_MMU2
+#endif // HAS_PRUSA_MMU2 || HAS_PRUSA_MMU3
 
 /**
  * Advanced Print Counter settings

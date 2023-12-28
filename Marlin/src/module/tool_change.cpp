@@ -1109,6 +1109,12 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
       mixer.T(new_tool);
     #endif
 
+  #elif HAS_PRUSA_MMU3
+
+    UNUSED(no_move);
+
+    MMU2::mmu2.tool_change(new_tool);
+
   #elif HAS_PRUSA_MMU2
 
     UNUSED(no_move);

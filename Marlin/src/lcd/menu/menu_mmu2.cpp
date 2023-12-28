@@ -25,7 +25,13 @@
 #if ALL(HAS_MARLINUI_MENU, MMU2_MENUS)
 
 #include "../../MarlinCore.h"
-#include "../../feature/mmu/mmu2.h"
+
+#if HAS_PRUSA_MMU3
+  #include "../../feature/mmu_from_prusa/mmu2.h"
+#else
+  #include "../../feature/mmu/mmu2.h"
+#endif
+
 #include "menu_mmu2.h"
 #include "menu_item.h"
 
@@ -36,14 +42,23 @@
 inline void action_mmu2_load_to_nozzle(const uint8_t tool) {
   ui.return_to_status();
   ui.status_printf(0, GET_TEXT_F(MSG_MMU2_LOADING_FILAMENT), int(tool + 1));
-  mmu2.load_to_nozzle(tool);
+  #if HAS_PRUSA_MMU3
+    MMU2::mmu2.load_filament_to_nozzle(tool);
+  #else
+    mmu2.load_to_nozzle(tool);
+  #endif
   ui.reset_status();
 }
 
 void _mmu2_load_to_feeder(const uint8_t tool) {
   ui.return_to_status();
   ui.status_printf(0, GET_TEXT_F(MSG_MMU2_LOADING_FILAMENT), int(tool + 1));
-  mmu2.load_to_feeder(tool);
+
+  #if HAS_PRUSA_MMU3
+    MMU2::mmu2.load_filament(tool);
+  #else
+    mmu2.load_to_feeder(tool);
+  #endif
   ui.reset_status();
 }
 
@@ -75,15 +90,24 @@ void _mmu2_eject_filament(uint8_t index) {
   ui.reset_status();
   ui.return_to_status();
   ui.status_printf(0, GET_TEXT_F(MSG_MMU2_EJECTING_FILAMENT), int(index + 1));
-  if (mmu2.eject_filament(index, true)) ui.reset_status();
+  #if HAS_PRUSA_MMU3
+    if (MMU2::mmu2.eject_filament(index, true)) ui.reset_status();
+  #else
+    if (mmu2.eject_filament(index, true)) ui.reset_status();
+  #endif
 }
 
 void action_mmu2_unload_filament() {
   ui.reset_status();
   ui.return_to_status();
   LCD_MESSAGE(MSG_MMU2_UNLOADING_FILAMENT);
-  idle();
-  if (mmu2.unload()) ui.reset_status();
+  #if HAS_PRUSA_MMU3
+    MMU2::marlin_idle(false);
+    if (MMU2::mmu2.unload()) ui.reset_status();
+  #else
+    idle();
+    if (mmu2.unload()) ui.reset_status();
+  #endif
 }
 
 void menu_mmu2_eject_filament() {
@@ -98,7 +122,15 @@ void menu_mmu2_eject_filament() {
 //
 
 void action_mmu2_reset() {
-  mmu2.init();
+  #if HAS_PRUSA_MMU3
+    #ifdef MMU2_RST_PIN
+      MMU2::mmu2.Reset(MMU2::MMU2::ResetForm::Hardware);
+    #else
+      MMU2::mmu2.Reset(MMU2::MMU2::ResetForm::Software);
+    #endif
+  #else
+    mmu2.init();
+  #endif
   ui.reset_status();
 }
 
@@ -139,15 +171,25 @@ void menu_mmu2_choose_filament() {
 //
 
 void menu_mmu2_pause() {
-  feeder_index = mmu2.get_current_tool();
+  #if HAS_PRUSA_MMU3
+    feeder_index = MMU2::mmu2.get_current_tool();
+  #else
+    feeder_index = mmu2.get_current_tool();
+  #endif
   START_MENU();
   #if LCD_HEIGHT > 2
     STATIC_ITEM(MSG_FILAMENT_CHANGE_HEADER, SS_DEFAULT|SS_INVERT);
   #endif
   ACTION_ITEM(MSG_MMU2_RESUME,          []{ wait_for_mmu_menu = false; });
-  ACTION_ITEM(MSG_MMU2_UNLOAD_FILAMENT, []{ mmu2.unload(); });
-  ACTION_ITEM(MSG_MMU2_LOAD_FILAMENT,   []{ mmu2.load_to_feeder(feeder_index); });
-  ACTION_ITEM(MSG_MMU2_LOAD_TO_NOZZLE,  []{ mmu2.load_to_nozzle(feeder_index); });
+  #if HAS_PRUSA_MMU3
+    ACTION_ITEM(MSG_MMU2_UNLOAD_FILAMENT, []{ MMU2::mmu2.unload(); });
+    ACTION_ITEM(MSG_MMU2_LOAD_FILAMENT,   []{ MMU2::mmu2.load_filament(feeder_index); });
+    ACTION_ITEM(MSG_MMU2_LOAD_TO_NOZZLE,  []{ MMU2::mmu2.load_filament_to_nozzle(feeder_index); });
+  #else
+    ACTION_ITEM(MSG_MMU2_UNLOAD_FILAMENT, []{ mmu2.unload(); });
+    ACTION_ITEM(MSG_MMU2_LOAD_FILAMENT,   []{ mmu2.load_to_feeder(feeder_index); });
+    ACTION_ITEM(MSG_MMU2_LOAD_TO_NOZZLE,  []{ mmu2.load_to_nozzle(feeder_index); });
+  #endif
   END_MENU();
 }
 

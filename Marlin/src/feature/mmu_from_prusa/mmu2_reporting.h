@@ -5,6 +5,13 @@
 #include "mmu2/error_codes.h"
 #include "mmu2/progress_codes.h"
 
+
+// TODO: I just needed to define these, later when we implement proper menus,
+//       we'll remove them...
+#define LCD_LEFT_BUTTON_CHOICE 0
+#define LCD_MIDDLE_BUTTON_CHOICE 1
+#define LCD_RIGHT_BUTTON_CHOICE 2
+
 namespace MMU2 {
 
 enum CommandInProgress : uint8_t {
@@ -107,5 +114,7 @@ void ScreenUpdateEnable();
 void ScreenClear();
 
 void tuneIdlerStallguardThreshold();
+
+void write_register_and_return_to_status_menu(uint8_t address, uint8_t value);
 
 } // namespace MMU2

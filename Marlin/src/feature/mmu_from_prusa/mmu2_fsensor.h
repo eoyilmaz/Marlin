@@ -1,9 +1,10 @@
 #pragma once
+#include "src/core/macros.h"
 #include <stdint.h>
 // #include "../runout.h"
 
 
-#if ANY(HAS_PRUSA_MMU2S, MMU_EXTRUDER_SENSOR)
+#if ANY(HAS_PRUSA_MMU3, HAS_PRUSA_MMU2S, MMU_EXTRUDER_SENSOR)
   #define FILAMENT_PRESENT() (READ(FIL_RUNOUT1_PIN) != FIL_RUNOUT1_STATE)
 #else
   #define FILAMENT_PRESENT() true

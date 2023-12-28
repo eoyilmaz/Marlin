@@ -64,7 +64,12 @@ void GcodeSuite::T(const int8_t tool_index) {
   // Count this command as movement / activity
   reset_stepper_timeout();
 
-  #if HAS_PRUSA_MMU2
+  #if HAS_PRUSA_MMU3
+    if (parser.string_arg) {
+      MMU2::mmu2.tool_change(parser.string_arg[0], uint8_t(tool_index));   // Special commands T?/Tx/Tc
+      return;
+    }
+  #elif HAS_PRUSA_MMU2
     if (parser.string_arg) {
       mmu2.tool_change(parser.string_arg);   // Special commands T?/Tx/Tc
       return;

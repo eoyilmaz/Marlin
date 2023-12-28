@@ -68,9 +68,9 @@ enum StepStatus : uint_fast8_t {
     ButtonPushed,         ///< The MMU reported the user pushed one of its three buttons.
 };
 
-inline constexpr uint32_t linkLayerTimeout = 2000;                 ///< default link layer communication timeout
-inline constexpr uint32_t dataLayerTimeout = linkLayerTimeout * 3; ///< data layer communication timeout
-inline constexpr uint32_t heartBeatPeriod = linkLayerTimeout / 2;  ///< period of heart beat messages (Q0)
+/*inline*/ constexpr uint32_t linkLayerTimeout = 2000;                 ///< default link layer communication timeout
+/*inline*/ constexpr uint32_t dataLayerTimeout = linkLayerTimeout * 3; ///< data layer communication timeout
+/*inline*/ constexpr uint32_t heartBeatPeriod = linkLayerTimeout / 2;  ///< period of heart beat messages (Q0)
 
 static_assert(heartBeatPeriod < linkLayerTimeout && linkLayerTimeout < dataLayerTimeout, "Incorrect ordering of timeouts");
 

@@ -2,7 +2,6 @@
 // #include "backlight.h"
 #include "eeprom.h"
 // #include "fastio.h"
-#include "src/pins/pins.h"
 #include "src/libs/buzzer.h"
 #include "sound.h"
 // #include "system_timer.h"

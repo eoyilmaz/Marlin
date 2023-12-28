@@ -23,7 +23,8 @@ constexpr InputIt find_if_cx(InputIt first, InputIt last, UnaryPredicate p) {
 // PrusaErrorCodeIndex in such a way that no searching will ever be done at
 // runtime. A call to FindError then compiles to a single instruction even on
 // the AVR.
-static constexpr uint8_t FindErrorIndex(uint16_t pec) {
+// static constexpr uint8_t FindErrorIndex(uint16_t pec) {
+static uint8_t FindErrorIndex(uint16_t pec) {
     constexpr uint16_t errorCodesSize = sizeof(errorCodes) / sizeof(errorCodes[0]);
     constexpr const auto *errorCodesEnd = errorCodes + errorCodesSize;
     const auto *i = find_if_cx(errorCodes, errorCodesEnd, [pec](uint16_t ed){ return ed == pec; });

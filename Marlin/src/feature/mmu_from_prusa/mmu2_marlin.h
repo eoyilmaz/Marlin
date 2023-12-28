@@ -5,6 +5,7 @@
 /// - enable unit testing of MMU top layer
 #pragma once
 #include <stdint.h>
+#include "src/MarlinCore.h"
 
 namespace MMU2 {
 

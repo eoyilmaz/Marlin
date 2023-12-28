@@ -21,7 +21,9 @@
 #include "../../module/temperature.h"
 #include "sound.h"
 
+
 namespace MMU2 {
+
 
 void BeginReport(CommandInProgress /*cip*/, ProgressCode ec) {
     // custom_message_type = CustomMsg::MMUProgress;
@@ -190,15 +192,17 @@ static uint8_t ReportErrorHookMonitor(uint8_t ei) {
         //! ----------------------
         //! @endcode
         //
-        lcd_putc_at(0, 3, current_selection == LCD_LEFT_BUTTON_CHOICE ? '>': ' ');
-        if (two_choices == false)
-        {
-            lcd_putc_at(9, 3, current_selection == LCD_MIDDLE_BUTTON_CHOICE ? '>': ' ');
-            lcd_putc_at(18, 3, current_selection == LCD_RIGHT_BUTTON_CHOICE ? '>': ' ');
-        } else {
-            // More button for two button screen
-            lcd_putc_at(18, 3, current_selection == LCD_MIDDLE_BUTTON_CHOICE ? '>': ' ');
-        }
+
+        // TODO: Use the equivelent func in MarlinUI
+        // lcd_putc_at(0, 3, current_selection == LCD_LEFT_BUTTON_CHOICE ? '>': ' ');
+        // if (two_choices == false)
+        // {
+        //     lcd_putc_at(9, 3, current_selection == LCD_MIDDLE_BUTTON_CHOICE ? '>': ' ');
+        //     lcd_putc_at(18, 3, current_selection == LCD_RIGHT_BUTTON_CHOICE ? '>': ' ');
+        // } else {
+        //     // More button for two button screen
+        //     lcd_putc_at(18, 3, current_selection == LCD_MIDDLE_BUTTON_CHOICE ? '>': ' ');
+        // }
         // Consume rotation event
         // lcd_encoder = 0;
         ui.encoderPosition = 0;
@@ -216,7 +220,8 @@ static uint8_t ReportErrorHookMonitor(uint8_t ei) {
         || (!two_choices && choice_selected == LCD_RIGHT_BUTTON_CHOICE)) // Three choices and right most button selected
     {
         // 'More' show error description
-        lcd_show_fullscreen_message_and_wait_P(_T(PrusaErrorDesc(ei)));
+        // lcd_show_fullscreen_message_and_wait_P(_T(PrusaErrorDesc(ei)));
+        LCD_ALERTMESSAGE_F(PrusaErrorDesc(ei));
         ret = 1;
     } else if(choice_selected == LCD_MIDDLE_BUTTON_CHOICE) {
         SetButtonResponse((ButtonOperations)button_op_right);
@@ -271,42 +276,90 @@ void ReportErrorHook(CommandInProgress /*cip*/, ErrorCode ec, uint8_t /*es*/) {
 
     const uint8_t ei = PrusaErrorCodeIndex((ErrorCode)ec);
 
-    switch ((uint8_t)ReportErrorHookState) {
-    case (uint8_t)ReportErrorHookStates::RENDER_ERROR_SCREEN:
+    // TODO: This part requires C++17 as "fallthrough" is not allowed in C++11,
+    //       Converting this section to a if clause before the switch..case
+    // switch ((uint8_t)ReportErrorHookState) {
+    // case (uint8_t)ReportErrorHookStates::RENDER_ERROR_SCREEN:
+    //     KEEPALIVE_STATE(PAUSED_FOR_USER);
+    //     ReportErrorHookStaticRender(ei);
+    //     ReportErrorHookState = ReportErrorHookStates::MONITOR_SELECTION;
+    //     [[fallthrough]];
+    // case (uint8_t)ReportErrorHookStates::MONITOR_SELECTION:
+    //     is_mmu_error_monitor_active = true;
+    //     ReportErrorHookDynamicRender(); // Render dynamic characters
+    //     sound_wait_for_user();
+    //     switch (ReportErrorHookMonitor(ei)) {
+    //         case 0:
+    //             // No choice selected, return to loop()
+    //             break;
+    //         case 1:
+    //             // More button selected, change state
+    //             ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
+    //             break;
+    //         case 2:
+    //             // Exit error screen and enable lcd updates
+    //             // lcd_update_enable(true);
+    //             ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_NONE;
+    //             // lcd_return_to_status();
+    //             ui.return_to_status();
+    //             sound_wait_for_user_reset();
+    //             // Reset the state in case a new error is reported
+    //             is_mmu_error_monitor_active = false;
+    //             KEEPALIVE_STATE(IN_HANDLER);
+    //             ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
+    //             break;
+    //         default:
+    //             break;
+    //     }
+    //     return; // Always return to loop() to let MMU trigger a call to ReportErrorHook again
+    //     break;
+    // case (uint8_t)ReportErrorHookStates::DISMISS_ERROR_SCREEN:
+    //     // lcd_update_enable(true);
+    //     ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_NONE;
+    //     // lcd_return_to_status();
+    //     ui.return_to_status();
+    //     sound_wait_for_user_reset();
+    //     // Reset the state in case a new error is reported
+    //     is_mmu_error_monitor_active = false;
+    //     KEEPALIVE_STATE(IN_HANDLER);
+    //     ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
+    //     break;
+    // default:
+    //     break;
+    // }
+
+    // This should be the equivelent of the switch..case above...
+    if( (uint8_t)ReportErrorHookState == (uint8_t)ReportErrorHookStates::RENDER_ERROR_SCREEN){
         KEEPALIVE_STATE(PAUSED_FOR_USER);
         ReportErrorHookStaticRender(ei);
         ReportErrorHookState = ReportErrorHookStates::MONITOR_SELECTION;
-        [[fallthrough]];
-    case (uint8_t)ReportErrorHookStates::MONITOR_SELECTION:
+        // [[fallthrough]];
+    }
+
+    if((uint8_t)ReportErrorHookState == (uint8_t)ReportErrorHookStates::MONITOR_SELECTION){
         is_mmu_error_monitor_active = true;
         ReportErrorHookDynamicRender(); // Render dynamic characters
         sound_wait_for_user();
-        switch (ReportErrorHookMonitor(ei)) {
-            case 0:
-                // No choice selected, return to loop()
-                break;
-            case 1:
-                // More button selected, change state
-                ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
-                break;
-            case 2:
-                // Exit error screen and enable lcd updates
-                // lcd_update_enable(true);
-                ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_NONE;
-                // lcd_return_to_status();
-                ui.return_to_status();
-                sound_wait_for_user_reset();
-                // Reset the state in case a new error is reported
-                is_mmu_error_monitor_active = false;
-                KEEPALIVE_STATE(IN_HANDLER);
-                ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
-                break;
-            default:
-                break;
+        uint8_t result = ReportErrorHookMonitor(ei);
+        if( result == 0){
+            // No choice selected, return to loop()
+        } else if ( result == 1){
+            // More button selected, change state
+            ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
+         } else if ( result == 2){
+            // Exit error screen and enable lcd updates
+            // lcd_update_enable(true);
+            ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_NONE;
+            // lcd_return_to_status();
+            ui.return_to_status();
+            sound_wait_for_user_reset();
+            // Reset the state in case a new error is reported
+            is_mmu_error_monitor_active = false;
+            KEEPALIVE_STATE(IN_HANDLER);
+            ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
         }
         return; // Always return to loop() to let MMU trigger a call to ReportErrorHook again
-        break;
-    case (uint8_t)ReportErrorHookStates::DISMISS_ERROR_SCREEN:
+    } else if ((uint8_t)ReportErrorHookState == (uint8_t)ReportErrorHookStates::DISMISS_ERROR_SCREEN) {
         // lcd_update_enable(true);
         ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_NONE;
         // lcd_return_to_status();
@@ -316,9 +369,6 @@ void ReportErrorHook(CommandInProgress /*cip*/, ErrorCode ec, uint8_t /*es*/) {
         is_mmu_error_monitor_active = false;
         KEEPALIVE_STATE(IN_HANDLER);
         ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
-        break;
-    default:
-        break;
     }
 }
 
@@ -400,6 +450,7 @@ void IncrementMMUFails(){
 bool cutter_enabled(){
     // TODO: I need Marlin developers' supervision here
     // return eeprom_read_byte((uint8_t*)EEPROM_MMU_CUTTER_ENABLED) == EEPROM_MMU_CUTTER_ENABLED_enabled;
+    return true;
 }
 
 void MakeSound(SoundType s){
@@ -498,54 +549,58 @@ struct _menu_tune_data_t
     TuneItem item;             // 3 bytes
 };
 
-static_assert(sizeof(_menu_tune_data_t) == 18);
-static_assert(sizeof(menu_data)>= sizeof(_menu_tune_data_t),"_menu_tune_data_t doesn't fit into menu_data");
+// static_assert(sizeof(_menu_tune_data_t) == 18);
+// static_assert(sizeof(menu_data)>= sizeof(_menu_tune_data_t), "_menu_tune_data_t doesn't fit into menu_data");
 
 void tuneIdlerStallguardThresholdMenu() {
-    static constexpr _menu_tune_data_t * const _md = (_menu_tune_data_t*)&(menu_data[0]);
+    // const uint8_t menu_data[32] = "Set Stallguard Threshold";
+    // // static constexpr _menu_tune_data_t * const _md = (_menu_tune_data_t*)&(menu_data[0]);
+    // static constexpr _menu_tune_data_t * const _md = (_menu_tune_data_t*)&(menu_data[0]);
 
-    // Do not timeout the screen, otherwise there will be FW crash (menu recursion)
-    // lcd_timeoutToStatus.stop();
-    if (_md->status == 0)
-    {
-        _md->status = 1; // Menu entered for the first time
+    // // Do not timeout the screen, otherwise there will be FW crash (menu recursion)
+    // // lcd_timeoutToStatus.stop();
+    // if (_md->status == 0)
+    // {
+    //     _md->status = 1; // Menu entered for the first time
 
-        // Fetch the TuneItem from PROGMEM
-        const uint8_t offset = (mmu2.MMUCurrentErrorCode() == ErrorCode::HOMING_IDLER_FAILED) ? 1 : 0;
-        memcpy_P(&(_md->item), &TuneItems[offset], sizeof(TuneItem));
+    //     // Fetch the TuneItem from PROGMEM
+    //     const uint8_t offset = (mmu2.MMUCurrentErrorCode() == ErrorCode::HOMING_IDLER_FAILED) ? 1 : 0;
+    //     memcpy_P(&(_md->item), &TuneItems[offset], sizeof(TuneItem));
 
-        // Fetch the value which is currently in MMU EEPROM
-        mmu2.ReadRegister(_md->item.address);
-        _md->currentValue = mmu2.GetLastReadRegisterValue();
-    }
+    //     // Fetch the value which is currently in MMU EEPROM
+    //     mmu2.ReadRegister(_md->item.address);
+    //     _md->currentValue = mmu2.GetLastReadRegisterValue();
+    // }
 
-    // MENU_BEGIN();
-    // ON_MENU_LEAVE(
-    //     mmu2.WriteRegister(_md->item.address, (uint16_t)_md->currentValue);
-    //     putErrorScreenToSleep = false;
-    //     lcd_return_to_status();
-    //     return;
-    // );
-    // MENU_ITEM_BACK_P(_T(MSG_DONE));
-    // MENU_ITEM_EDIT_int3_P(
-    //     _i("Sensitivity"), ////MSG_MMU_SENSITIVITY c=18
+    // // MENU_BEGIN();
+    // // ON_MENU_LEAVE(
+    // //     mmu2.WriteRegister(_md->item.address, (uint16_t)_md->currentValue);
+    // //     putErrorScreenToSleep = false;
+    // //     lcd_return_to_status();
+    // //     return;
+    // // );
+    // // MENU_ITEM_BACK_P(_T(MSG_DONE));
+    // // MENU_ITEM_EDIT_int3_P(
+    // //     _i("Sensitivity"), ////MSG_MMU_SENSITIVITY c=18
+    // //     &_md->currentValue,
+    // //     _md->item.minValue,
+    // //     _md->item.maxValue
+    // // );
+    // // MENU_END();
+
+    // START_MENU();
+    // BACK_ITEM(MSG_BACK);
+    // EDIT_ITEM(
+    //     int8,
+    //     MSG_MMU_SENSITIVITY,
     //     &_md->currentValue,
     //     _md->item.minValue,
-    //     _md->item.maxValue
-    // );
-    // MENU_END();
-
-    START_MENU();
-    BACK_ITEM(MSG_BACK);
-    EDIT_ITEM(
-        int3,
-        _UxGT("Sensitivity"),
-        &_md->currentValue,
-        _md->item.minValue,
-        _md->item.maxValue
-    );
-    END_MENU();
-    write_register_and_return_to_status_menu(_md->item.address, _md->currentValue);
+    //     _md->item.maxValue,
+    //     []{
+    //         write_register_and_return_to_status_menu(_md->item.address, _md->currentValue);
+    //     }
+    //     );
+    // END_MENU();
 }
 
 
@@ -560,7 +615,7 @@ void write_register_and_return_to_status_menu(uint8_t address, uint8_t value){
 
 void tuneIdlerStallguardThreshold() {
     putErrorScreenToSleep = true;
-    menu_submenu(tuneIdlerStallguardThresholdMenu);
+    // menu_submenu(tuneIdlerStallguardThresholdMenu);
 }
 
 } // namespace MMU2

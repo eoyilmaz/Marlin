@@ -1,8 +1,12 @@
 #include "src/MarlinCore.h"
+#include "src/core/language.h"
 #include "src/module/motion.h"
 #include "src/gcode/queue.h"
 #if HAS_FILAMENT_SENSOR
   #include "src/feature/runout.h"
+#endif
+#if HAS_LEVELING
+    #include "src/feature/bedlevel/bedlevel.h"
 #endif
 #include "mmu2.h"
 #include "mmu2_config.h"
@@ -19,7 +23,6 @@
 #include "SpoolJoin.h"
 
 #include "messages.h"
-#include "src/core/language.h"
 
 #ifdef __AVR__
 // As of FW 3.12 we only support building the FW with only one extruder, all the multi-extruder infrastructure will be removed.

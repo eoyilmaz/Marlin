@@ -229,14 +229,12 @@
   #include "feature/controllerfan.h"
 #endif
 
-#if HAS_PRUSA_MMU1
-  #include "feature/mmu/mmu.h"
-#endif
-
 #if HAS_PRUSA_MMU3
   #include "feature/mmu_from_prusa/mmu2.h"
 #elif HAS_PRUSA_MMU2
   #include "feature/mmu/mmu2.h"
+#elif HAS_PRUSA_MMU1
+  #include "feature/mmu/mmu.h"
 #endif
 
 #if ENABLED(PASSWORD_FEATURE)
@@ -782,7 +780,11 @@ void idle(const bool no_stepper_sleep/*=false*/) {
 
   // Handle filament runout sensors
   #if HAS_FILAMENT_SENSOR
-    if (TERN1(HAS_PRUSA_MMU2, !mmu2.enabled()))
+    #if HAS_PRUSA_MMU3
+      if(!MMU2::mmu2.Enabled())
+    #elif HAS_PRUSA_MMU2
+      if (!mmu2.enabled())
+    #endif
       runout.run();
   #endif
 
@@ -847,7 +849,11 @@ void idle(const bool no_stepper_sleep/*=false*/) {
   #endif
 
   // Update the Průša MMU2
-  TERN_(HAS_PRUSA_MMU2, mmu2.mmu_loop());
+  #if HAS_PRUSA_MMU3
+    MMU2::mmu2.mmu_loop();
+  #elif HAS_PRUSA_MMU2
+    mmu2.mmu_loop();
+  #endif
 
   // Handle Joystick jogging
   TERN_(POLL_JOG, joystick.inject_jog_moves());
@@ -1572,7 +1578,9 @@ void setup() {
     SETUP_RUN(stepper_driver_backward_report());
   #endif
 
-  #if HAS_PRUSA_MMU2
+  #if HAS_PRUSA_MMU3
+    SETUP_RUN(MMU2::mmu2.Start());
+  #elif HAS_PRUSA_MMU2
     SETUP_RUN(mmu2.init());
   #endif
 

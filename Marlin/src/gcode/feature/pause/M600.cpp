@@ -106,7 +106,11 @@ void GcodeSuite::M600() {
     }
   #endif
 
-  const bool standardM600 = TERN1(MMU2_MENUS, !mmu2.enabled());
+  #if HAS_PRUSA_MMU3
+    const bool standardM600 = TERN1(MMU2_MENUS, !MMU2::mmu2.Enabled());
+  #elif HAS_PRUSA_MMU2
+    const bool standardM600 = TERN1(MMU2_MENUS, !mmu2.enabled());
+  #endif
 
   // Show initial "wait for start" message
   if (standardM600)

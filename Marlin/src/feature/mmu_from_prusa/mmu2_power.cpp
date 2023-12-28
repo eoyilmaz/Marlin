@@ -1,9 +1,14 @@
+#include "mmu2.h"
 #include "mmu2_power.h"
-// #include "Configuration_var.h"
+
+#include "src/MarlinCore.h"
+
+#include "src/core/macros.h"
+#include "src/core/boards.h"
 #include "src/pins/pins.h"
+// #include "Configuration_var.h"
 // #include "fastio.h"
 // #include <util/delay.h>
-#include "mmu2.h"
 
 namespace MMU2 {
 

@@ -731,6 +731,8 @@ namespace LanguageNarrow_en {
   LSTR MSG_MMU2_EJECT_RECOVER             = _UxGT("MMU2 Eject Recover");
   LSTR MSG_MMU2_REMOVE_AND_CLICK          = _UxGT("Remove and click...");
 
+  LSTR MSG_MMU_SENSITIVITY                = _UxGT("Sensitivity");
+
   LSTR MSG_MIX                            = _UxGT("Mix");
   LSTR MSG_MIX_COMPONENT_N                = _UxGT("Component {");
   LSTR MSG_MIXER                          = _UxGT("Mixer");

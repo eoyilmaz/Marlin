@@ -600,8 +600,6 @@
     #define HAS_PRUSA_MMU2 1
     #define HAS_PRUSA_MMU2S 1
   #elif MMU_MODEL % 10 == PRUSA_MMU3
-    #define HAS_PRUSA_MMU2 1
-    #define HAS_PRUSA_MMU2S 1
     #define HAS_PRUSA_MMU3 1
   #endif
   #if MMU_MODEL >= EXTENDABLE_EMU_MMU2
@@ -697,7 +695,7 @@
   #define E_STEPPERS      EXTRUDERS
   #define E_MANUAL        EXTRUDERS
 
-#elif HAS_PRUSA_MMU2                // Průša Multi-Material Unit v2
+#elif HAS_PRUSA_MMU2 || HAS_PRUSA_MMU3 // Průša Multi-Material Unit v2
 
   #define E_STEPPERS      1
   #define E_MANUAL        1

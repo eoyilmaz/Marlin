@@ -6,8 +6,8 @@
 // This is for Prusa MK3-style extruders. Customize for your hardware.
 #define MMU2_FILAMENTCHANGE_EJECT_FEED 80.0
 
-#define NOZZLE_PARK_XY_FEEDRATE 50
-#define NOZZLE_PARK_Z_FEEDRATE 15
+// #define NOZZLE_PARK_XY_FEEDRATE 50
+// #define NOZZLE_PARK_Z_FEEDRATE 15
 
 // Nominal distance from the extruder gear to the nozzle tip is 87mm
 // However, some slipping may occur and we need separate distances for
