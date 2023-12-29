@@ -7,23 +7,23 @@ general structure is as follows:
 
 ```shell
 Requests (what Marlin requests):
-Marlin: {RequestMsgCode}{Value}*{CRC8}\n
+MMU2:>{RequestMsgCode}{Value}*{CRC8}\n
 
 Responses (what MMU responds with):
-MMU   : {RequestMsgCode}{Value} {ResponseMsgParamCode}{paramValue}*{CRC8}\n
+MMU2:<{RequestMsgCode}{Value} {ResponseMsgParamCode}{paramValue}*{CRC8}\n
 ```
 
 An example to that would be:
 
 ```shell
-Marlin: S0*c6\n
-MMU   : S0 A3*22\n
+MMU2:>S0*c6\n
+MMU2:<S0 A3*22\n
 
-Marlin: S1*ad\n
-MMU   : S1 A0*34\n
+MMU2:>S1*ad\n
+MMU2:<S1 A0*34\n
 
-Marlin: S2*10\n
-MMU   : S2 A2*65\n
+MMU2:>S2*10\n
+MMU2:<S2 A2*65\n
 ```
 
 All combined we have a response of v3.0.2 as the firmware version.
@@ -35,43 +35,43 @@ When initialized, MMU waits for requests. Marlin repeatedly sends `S0` commands
 until it gets an answer:
 
 ```shell
-Marlin: S0*c6\n
-Marlin: S0*c6\n
-Marlin: S0*c6\n
-Marlin: S0*c6\n
-Marlin: S0*c6\n
-Marlin: S0*c6\n
-Marlin: S0*c6\n
+MMU2:>S0*c6\n
+MMU2:>S0*c6\n
+MMU2:>S0*c6\n
+MMU2:>S0*c6\n
+MMU2:>S0*c6\n
+MMU2:>S0*c6\n
+MMU2:>S0*c6\n
 ...
 ```
 
 When the communication is in place MMU follows with:
 
 ```shell
-MMU   : S0 A3*22\n
+MMU2:<S0 A3*22\n
 ```
 
 Then Marlin continues to get the rest of the MMU firmware version.
 
 ```shell
-Marlin: S1*ad\n
-MMU   : S1 A0*34\n
-Marlin: S2*10\n
-MMU   : S2 A2*65\n
+MMU2:>S1*ad\n
+MMU2:<S1 A0*34\n
+MMU2:>S2*10\n
+MMU2:<S2 A2*65\n
 ```
 
 Setting the mode to SpreadCycle (M0) or StealthChop (M1)
 
 ```shell
-Marlin: M1*{CRC8};
-MMU   : ---nothing---
+MMU2:>M1*{CRC8};
+MMU2:<---nothing---
 ```
 
 #endif
 
 ```shell
-Marlin: P0
-MMU   : P0 A{FINDA status}*{CRC8}\n
+MMU2:>P0
+MMU2:<P0 A{FINDA status}*{CRC8}\n
 ```
 
 Now we are sure MMU is available and ready. If there was a timeout or other
@@ -90,41 +90,41 @@ Toolchange
 ==========
 
 ```shell
-Marlin: T{Filament index}*{CRC8}\n
-Marlin: Q0*ea\n
+MMU2:>T{Filament index}*{CRC8}\n
+MMU2:<Q0*ea\n
 ```
 
 MMU sends
 
 ```shell
-MMU   : T{filament index}*P{ProgressCode}{CRC8}\n
+MMU2:<T{filament index}*P{ProgressCode}{CRC8}\n
 ```
 
 Which in normal operation would be as follows, let's say that we requested MMU
 to load `T0``:
 
 ```shell
-Marlin: T0*{CRC8}\n
+MMU2:>T0*{CRC8}\n
 
-Marlin: Q0*{CRC8}\n
-MMU   : T0*P5{CRC8}\n  # P5 => FeedingToFinda
+MMU2:>Q0*{CRC8}\n
+MMU2:<T0*P5{CRC8}\n  # P5 => FeedingToFinda
 
-Marlin: Q0*{CRC8}\n
-MMU   : T0*P7{CRC8}\n  # P7 => FeedingToNozzle
+MMU2:>Q0*{CRC8}\n
+MMU2:<T0*P7{CRC8}\n  # P7 => FeedingToNozzle
 ```
 
 as soon as the filament is fed down to the extruder. We follow with:
 
 ```shell
-Marlin: C0*{CRC8}\n
+MMU2:>C0*{CRC8}\n
 ```
 
 MMU will feed a few more millimeters of filament for the extruder gears to
 grab. When done, the MMU sends
 
 ```shell
-Marlin: Q0*{CRC8}\n
-MMU   : T0*P9{CRC8}\n  # P9 => FinishingMoves
+MMU2:>Q0*{CRC8}\n
+MMU2:<T0*P9{CRC8}\n  # P9 => FinishingMoves
 ```
 
 After the `T0*P9` response we immediately continue with the next G-code which
@@ -135,20 +135,20 @@ FINDA status
 ============
 
 ```shell
-Marlin: P0*{CRC8}\n
+MMU2:>P0*{CRC8}\n
 ```
 
 If the filament is loaded to the extruder, FINDA status is 1 and MMU responds
 with:
 
 ```shell
-MMU   : P0 A1*{CRC8}\n
+MMU2:<P0 A1*{CRC8}\n
 ```
 
 otherwise:
 
 ```shell
-MMU   : P0 A0*7b\n
+MMU2:<P0 A0*7b\n
 ```
 
 This could be used as filament runout sensor if probed regularly.
@@ -160,27 +160,27 @@ Load filament
 To load a filament to the MMU itself, we run:
 
 ```shell
-Marlin: L{Filament index}*{CRC8}\n
-MMU   : L{Filament index} A1*{CRC8}\n
+MMU2:>L{Filament index}*{CRC8}\n
+MMU2:<L{Filament index} A1*{CRC8}\n
 ```
 
 and immediately after that we query the status:
 
 ```shell
-Marlin: Q0*{CRC8}\n
+MMU2:>Q0*{CRC8}\n
 ```
 
 MMU will respond with status messages:
 
 ```shell
-MMU   : L0*P5{CRC8}\n
+MMU2:<L0*P5{CRC8}\n
 ```
 
 MMU will load the filament and when done:
 
 ```shell
-Marlin: Q0*{CRC8}\n
-MMU   : L0*P9{CRC8}\n
+MMU2:>Q0*{CRC8}\n
+MMU2:<L0*P9{CRC8}\n
 ```
 
 Unload filament
