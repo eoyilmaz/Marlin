@@ -2,11 +2,11 @@
 #include <stdint.h>
 #include <stddef.h>
 #ifdef __AVR__
-    #include "mmu2/buttons.h"
-    #include "mmu2/error_codes.h"
+    #include "mmu_hw/buttons.h"
+    #include "mmu_hw/error_codes.h"
 #else
-    #include "mmu2/buttons.h"
-    #include "mmu2/error_codes.h"
+    #include "mmu_hw/buttons.h"
+    #include "mmu_hw/error_codes.h"
 #endif
 
 namespace MMU2 {

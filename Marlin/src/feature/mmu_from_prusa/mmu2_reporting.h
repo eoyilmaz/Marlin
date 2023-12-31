@@ -2,8 +2,8 @@
 
 #pragma once
 #include <stdint.h>
-#include "mmu2/error_codes.h"
-#include "mmu2/progress_codes.h"
+#include "mmu_hw/error_codes.h"
+#include "mmu_hw/progress_codes.h"
 
 
 // TODO: I just needed to define these, later when we implement proper menus,

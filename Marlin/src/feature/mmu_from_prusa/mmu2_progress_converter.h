@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
-#include "mmu2/progress_codes.h"
+#include "mmu_hw/progress_codes.h"
 
 namespace MMU2 {
 

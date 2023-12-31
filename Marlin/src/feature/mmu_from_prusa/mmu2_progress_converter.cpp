@@ -3,7 +3,7 @@
 #ifdef __AVR__
     #include <avr/pgmspace.h>
 #endif
-#include "mmu2/progress_codes.h"
+#include "mmu_hw/progress_codes.h"
 #include "messages.h"
 
 // TODO: This needs to be replaced with whatever we are using to translate text

@@ -7,10 +7,10 @@
 #include <avr/pgmspace.h>
 
 #ifdef __AVR__
-    #include "mmu2/error_codes.h"
-    #include "mmu2/progress_codes.h"
-    #include "mmu2/buttons.h"
-    #include "mmu2/registers.h"
+    #include "mmu_hw/error_codes.h"
+    #include "mmu_hw/progress_codes.h"
+    #include "mmu_hw/buttons.h"
+    #include "mmu_hw/registers.h"
     #include "mmu2_protocol.h"
 
 // #include <array> std array is not available on AVR ... we need to "fake" it
@@ -32,13 +32,13 @@ public:
 #else
 
     #include <array>
-    #include "mmu2/error_codes.h"
-    #include "mmu2/progress_codes.h"
+    #include "mmu_hw/error_codes.h"
+    #include "mmu_hw/progress_codes.h"
 
     // prevent ARM HAL macros from breaking our code
     #undef CRC
     #include "mmu2_protocol.h"
-    #include "mmu2/buttons.h"
+    #include "mmu_hw/buttons.h"
     #include "registers.h"
 #endif
 
