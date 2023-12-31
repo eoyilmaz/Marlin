@@ -12,6 +12,15 @@
 
 namespace MMU2 {
 
+/// Can be used to block printer's filament sensor handling - to avoid errorneous injecting of M600
+/// while doing a toolchange with the MMU
+/// In case of "no filament sensor" these methods default to an empty implementation
+class FSensorBlockRunout {
+public:
+    FSensorBlockRunout();
+    ~FSensorBlockRunout();
+};
+
 /// Possible states of filament from the perspective of presence in various parts of the printer
 /// Beware, the numeric codes are important and sent into the MMU
 enum class FilamentState : uint_fast8_t {
