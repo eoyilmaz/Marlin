@@ -9,7 +9,7 @@
 
 namespace MMU2 {
 
-void extruder_move(float distance, float feed_rate);
+void extruder_move(const float distance, const float feed_rate, const bool sync=true);
 void extruder_schedule_turning(float feed_rate);
 
 float move_raise_z(float delta);
