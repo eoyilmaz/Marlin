@@ -5,7 +5,6 @@
 #include "src/module/planner.h"
 #include "src/module/temperature.h"
 #include "mmu2_marlin.h"
-#include "mmu2_config.h"
 
 namespace MMU2 {
 

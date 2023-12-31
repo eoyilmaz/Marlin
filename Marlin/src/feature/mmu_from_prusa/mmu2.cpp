@@ -8,7 +8,6 @@
 #include "src/feature/pause.h"
 #include "src/libs/stopwatch.h"
 #include "mmu2.h"
-#include "mmu2_config.h"
 #include "mmu2_error_converter.h"
 #include "mmu2_fsensor.h"
 #include "mmu2_log.h"

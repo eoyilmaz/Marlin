@@ -13,7 +13,16 @@ typedef float feedRate_t;
     // #include <atomic>
 #endif
 
-struct E_Step;
+// struct E_Step;
+
+struct E_Step {
+    float extrude;  ///< extrude distance in mm
+    float feedRate; ///< feed rate in mm/s
+};
+
+static constexpr E_Step ramming_sequence[] PROGMEM = {MMU2_RAMMING_SEQUENCE};
+
+static constexpr E_Step load_to_nozzle_sequence[] PROGMEM = {MMU2_LOAD_TO_NOZZLE_SEQUENCE};
 
 namespace MMU2 {
 
