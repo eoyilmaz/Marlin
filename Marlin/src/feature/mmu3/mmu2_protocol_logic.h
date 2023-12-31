@@ -45,9 +45,6 @@ public:
 /// New MMU2 protocol logic
 namespace MMU2 {
 
-// @TODO: use the MMU2_C0_RETRY or combine it with MAX_RETRIES
-static constexpr uint8_t MAX_RETRIES = 3U;
-
 using namespace modules::protocol;
 
 class ProtocolLogic;

@@ -1,5 +1,6 @@
 #include "src/MarlinCore.h"
 #include "src/core/language.h"
+#include "src/module/planner.h"
 #include "src/module/motion.h"
 #include "src/gcode/queue.h"
 #if HAS_LEVELING
@@ -232,10 +233,8 @@ void MMU2::CheckFINDARunout() {
         marlin_stop_and_save_print_to_ram();
         resume_print();
         if (SpoolJoin::spooljoin.isSpoolJoinEnabled() && get_current_tool() != (uint8_t)FILAMENT_UNKNOWN){ // Can't auto if F=?
-            // enquecommand_front_P(PSTR("M600 AUTO")); // save print and run M600 command
             queue.enqueue_now_P(PSTR("M600 AUTO"));  // save print and run M600 command
         } else {
-            // enquecommand_front_P(MSG_M600); // save print and run M600 command
             queue.enqueue_now_P(MSG_M600);// save print and run M600 command
         }
     }
@@ -1125,8 +1124,8 @@ void MMU2::OnMMUProgressMsgSame(ProgressCode pc) {
                 // Instead of doing a very long extrude as PrusaFirmware is doing,
                 // I think Marlin's own MMU2s code has a better approach to this
                 // by spinning the extruder indefinitelly...
-                while (!planner_any_moves()) {
-                    extruder_move(0.25, logic.PulleySlowFeedRate(), false);
+                while (planner.movesplanned() < 3) {
+                    extruder_move(2.5, logic.PulleySlowFeedRate(), false);
                 }
                 break;
             default:

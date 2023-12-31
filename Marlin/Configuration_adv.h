@@ -695,7 +695,7 @@
 #define COOLER_AUTO_FAN_PIN -1
 
 #define EXTRUDER_AUTO_FAN_TEMPERATURE 50
-#define EXTRUDER_AUTO_FAN_SPEED 153  // 255 == full speed
+#define EXTRUDER_AUTO_FAN_SPEED 255  // 255 == full speed
 #define CHAMBER_AUTO_FAN_TEMPERATURE 30
 #define CHAMBER_AUTO_FAN_SPEED 255
 #define COOLER_AUTO_FAN_TEMPERATURE 18
@@ -4321,7 +4321,8 @@
   //#define E_MUX1_PIN 42  // Needed for 3 to 8 inputs
   //#define E_MUX2_PIN 44  // Needed for 5 to 8 inputs
 #elif HAS_PRUSA_MMU2 || HAS_PRUSA_MMU3
-  // Serial port used for communication with MMU2.
+  // Common settings for MMU2/MMU2S/MMU3
+  // Serial port used for communication with MMU2/MMU2S/MMU3.
   #define MMU2_SERIAL_PORT 1
   #define MMU_BAUD 115200
 
@@ -4329,59 +4330,73 @@
   //#define MMU2_RST_PIN 23
 
   // Enable if the MMU2 has 12V stepper motors (MMU2 Firmware 1.0.2 and up)
+  // (MMU2/MMU2S only)
   //#define MMU2_MODE_12V
 
   // G-code to execute when MMU2 F.I.N.D.A. probe detects filament runout
+  //(MMU2/MMU2S only)
   #define MMU2_FILAMENT_RUNOUT_SCRIPT "M600"
 
-  // Add an LCD menu for MMU2
+  // Add an LCD menu for MMU2/MMU2S/MMU3
   #define MMU2_MENUS
 
   // Settings for filament load / unload from the LCD menu.
   // This is for Průša MK3-style extruders. Customize for your hardware.
   #define MMU2_FILAMENTCHANGE_EJECT_FEED 80.0
-  #define MMU2_LOAD_TO_NOZZLE_SEQUENCE \
-    {  4.4,  871 }, \
-    { 10.0, 1393 }, \
-    {  4.4,  871 }, \
-    { 10.0,  198 }
-    // #define MMU2_LOAD_TO_NOZZLE_SEQUENCE \
-    //     { MMU2_EXTRUDER_PTFE_LENGTH,       810.0F / 60.F}, \
-    //     { MMU2_EXTRUDER_HEATBREAK_LENGTH,  198.0F / 60.F}
-    //     // { MMU2_EXTRUDER_PTFE_LENGTH,       810.0F / 60.F}, // feed rate = 13.5mm/s - Load fast while not at heatbreak
-    //     // { MMU2_EXTRUDER_HEATBREAK_LENGTH,  198.0F / 60.F}  // feed rate = 3.3mm/s  - Load slower once filament reaches heatbreak
 
-  #define MMU2_RAMMING_SEQUENCE \
-    {   1.0, 1000 }, \
-    {   1.0, 1500 }, \
-    {   2.0, 2000 }, \
-    {   1.5, 3000 }, \
-    {   2.5, 4000 }, \
-    { -15.0, 5000 }, \
-    { -14.0, 1200 }, \
-    {  -6.0,  600 }, \
-    {  10.0,  700 }, \
-    { -10.0,  400 }, \
-    { -50.0, 2000 }
-    // #define MMU2_RAMMING_SEQUENCE \
-    //     { 0.2816F,  1339.0F / 60.F}, \
-    //     { 0.3051F,  1451.0F / 60.F}, \
-    //     { 0.3453F,  1642.0F / 60.F}, \
-    //     { 0.3990F,  1897.0F / 60.F}, \
-    //     { 0.4761F,  2264.0F / 60.F}, \
-    //     { 0.5767F,  2742.0F / 60.F}, \
-    //     { 0.5691F,  3220.0F / 60.F}, \
-    //     { 0.1081F,  3220.0F / 60.F}, \
-    //     { 0.7644F,  3635.0F / 60.F}, \
-    //     { 0.8248F,  3921.0F / 60.F}, \
-    //     { 0.8483F,  4033.0F / 60.F}, \
-    //     { -15.0F,   6000.0F / 60.F}, \
-    //     { -24.5F,   1200.0F / 60.F}, \
-    //     { -7.0F,    600.0F / 60.F}, \
-    //     { -3.5F,    360.0F / 60.F}, \
-    //     { 20.0F,    454.0F / 60.F}, \
-    //     { -20.0F,   303.0F / 60.F}, \
-    //     { -35.0F,   2000.0F / 60.F}
+  // ------------
+  // MMU2 / MMU2S
+  // ------------
+  // These old MMU2 sequences are using mm/min
+  // it is not compatible with MMU3 as MMU3 is using mm/s
+  // #define MMU2_LOAD_TO_NOZZLE_SEQUENCE \
+  //   {  4.4,  871 }, \
+  //   { 10.0, 1393 }, \
+  //   {  4.4,  871 }, \
+  //   { 10.0,  198 }
+
+  // #define MMU2_RAMMING_SEQUENCE \
+  //   {   1.0, 1000 }, \
+  //   {   1.0, 1500 }, \
+  //   {   2.0, 2000 }, \
+  //   {   1.5, 3000 }, \
+  //   {   2.5, 4000 }, \
+  //   { -15.0, 5000 }, \
+  //   { -14.0, 1200 }, \
+  //   {  -6.0,  600 }, \
+  //   {  10.0,  700 }, \
+  //   { -10.0,  400 }, \
+  //   { -50.0, 2000 }
+
+  // ----
+  // MMU3
+  // ----
+  // These values are compatible with MMU3 as they are defined in mm/s
+  #define MMU2_LOAD_TO_NOZZLE_SEQUENCE \
+      { MMU2_EXTRUDER_PTFE_LENGTH,       810.0F / 60.F}, \
+      { MMU2_EXTRUDER_HEATBREAK_LENGTH,  198.0F / 60.F}
+      // { MMU2_EXTRUDER_PTFE_LENGTH,       810.0F / 60.F}, // feed rate = 13.5mm/s - Load fast while not at heatbreak
+      // { MMU2_EXTRUDER_HEATBREAK_LENGTH,  198.0F / 60.F}  // feed rate = 3.3mm/s  - Load slower once filament reaches heatbreak
+
+    #define MMU2_RAMMING_SEQUENCE \
+        { 0.2816F,  1339.0F / 60.F}, \
+        { 0.3051F,  1451.0F / 60.F}, \
+        { 0.3453F,  1642.0F / 60.F}, \
+        { 0.3990F,  1897.0F / 60.F}, \
+        { 0.4761F,  2264.0F / 60.F}, \
+        { 0.5767F,  2742.0F / 60.F}, \
+        { 0.5691F,  3220.0F / 60.F}, \
+        { 0.1081F,  3220.0F / 60.F}, \
+        { 0.7644F,  3635.0F / 60.F}, \
+        { 0.8248F,  3921.0F / 60.F}, \
+        { 0.8483F,  4033.0F / 60.F}, \
+        { -15.0F,   6000.0F / 60.F}, \
+        { -24.5F,   1200.0F / 60.F}, \
+        { -7.0F,    600.0F / 60.F}, \
+        { -3.5F,    360.0F / 60.F}, \
+        { 20.0F,    454.0F / 60.F}, \
+        { -20.0F,   303.0F / 60.F}, \
+        { -35.0F,   2000.0F / 60.F}
 
   /**
    * Using a sensor like the MMU2S
@@ -4422,6 +4437,9 @@
     // Continue unloading if sensor detects filament after the initial unload move
     //#define MMU_IR_UNLOAD_MOVE
   #elif HAS_PRUSA_MMU3
+    // MMU3 Specific settings
+
+    #define MAX_RETRIES 3 // TODO: This has the same purpose of MMU2_C0_RETRY
 
     // Nominal distance from the extruder gear to the nozzle tip is 87mm
     // However, some slipping may occur and we need separate distances for
@@ -4459,7 +4477,7 @@
     // filament sensor reading flickers or filament is jammed.
     #define MMU2_CHECK_FILAMENT_PRESENCE_EXTRUSION_LENGTH MMU2_EXTRUDER_PTFE_LENGTH + MMU2_EXTRUDER_HEATBREAK_LENGTH + MMU2_VERIFY_LOAD_TO_NOZZLE_TWEAK + MMU2_FILAMENT_SENSOR_POSITION
 
-    #define MMU2_NO_TOOL (uint8_t)99
+    #define MMU2_NO_TOOL 99
 
   #else
 
