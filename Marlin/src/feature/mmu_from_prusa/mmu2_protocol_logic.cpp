@@ -186,7 +186,8 @@ StepStatus ProtocolLogic::ExpectingMessage() {
                 break;
             }
         }
-            [[fallthrough]];      // otherwise
+            // [[fallthrough]];      // otherwise
+            /* fall through */
         default:
             RecordUARTActivity(); // something has happened on the UART, update the timeout record
             return ProtocolError;
@@ -280,7 +281,8 @@ StepStatus ProtocolLogic::ScopeStep() {
         }
     } else {
         // we are expecting a message
-        if (auto expmsg = ExpectingMessage(); expmsg != MessageReady) // this whole statement takes 12B
+        auto expmsg = ExpectingMessage();
+        if (expmsg != MessageReady)
             return expmsg;
 
         // process message
@@ -305,7 +307,7 @@ StepStatus ProtocolLogic::StartSeqStep() {
     switch (scopeState) {
     case ScopeState::S0Sent: // received response to S0 - major
     case ScopeState::S1Sent: // received response to S1 - minor
-    case ScopeState::S2Sent: // received response to S2 - minor
+    case ScopeState::S2Sent: // received response to S2 - patch
         return ProcessVersionResponse((uint8_t)scopeState - (uint8_t)ScopeState::S0Sent);
     case ScopeState::S3Sent: // received response to S3 - revision
         if (rsp.request.code != RequestMsgCodes::Version || rsp.request.value != 3) {
@@ -479,7 +481,8 @@ StepStatus ProtocolLogic::IdleStep() {
                     IdleRestart();
                     return Interrupted;
                 }
-                [[fallthrough]];
+                // [[fallthrough]];
+                /* fall through */
             case ResponseMsgParamCodes::Processing:
                 // @@TODO we may actually use this branch to report progress of manual operation on the MMU
                 // The MMU sends e.g. X0 P27 after its restart when the user presses an MMU button to move the Selector

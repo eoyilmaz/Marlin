@@ -333,7 +333,6 @@ void ReportErrorHook(CommandInProgress /*cip*/, ErrorCode ec, uint8_t /*es*/) {
         KEEPALIVE_STATE(PAUSED_FOR_USER);
         ReportErrorHookStaticRender(ei);
         ReportErrorHookState = ReportErrorHookStates::MONITOR_SELECTION;
-        // [[fallthrough]];
     }
 
     if((uint8_t)ReportErrorHookState == (uint8_t)ReportErrorHookStates::MONITOR_SELECTION){
@@ -346,11 +345,9 @@ void ReportErrorHook(CommandInProgress /*cip*/, ErrorCode ec, uint8_t /*es*/) {
         } else if ( result == 1){
             // More button selected, change state
             ReportErrorHookState = ReportErrorHookStates::RENDER_ERROR_SCREEN;
-         } else if ( result == 2){
+        } else if ( result == 2){
             // Exit error screen and enable lcd updates
-            // lcd_update_enable(true);
-            ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_NONE;
-            // lcd_return_to_status();
+            ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_REDRAW_NOW;
             ui.return_to_status();
             sound_wait_for_user_reset();
             // Reset the state in case a new error is reported
@@ -360,9 +357,7 @@ void ReportErrorHook(CommandInProgress /*cip*/, ErrorCode ec, uint8_t /*es*/) {
         }
         return; // Always return to loop() to let MMU trigger a call to ReportErrorHook again
     } else if ((uint8_t)ReportErrorHookState == (uint8_t)ReportErrorHookStates::DISMISS_ERROR_SCREEN) {
-        // lcd_update_enable(true);
-        ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_NONE;
-        // lcd_return_to_status();
+        ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_REDRAW_NOW;
         ui.return_to_status();
         sound_wait_for_user_reset();
         // Reset the state in case a new error is reported
@@ -507,7 +502,8 @@ void FullScreenMsgRestoringTemperature(){
 
 void ScreenUpdateEnable(){
     // lcd_update_enable(true);
-    ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_CALL_REDRAW_NEXT;
+    // ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_CALL_REDRAW_NEXT;
+    ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_REDRAW_NOW;
 }
 
 void ScreenClear(){
