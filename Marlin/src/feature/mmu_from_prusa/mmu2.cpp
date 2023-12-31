@@ -2,12 +2,11 @@
 #include "src/core/language.h"
 #include "src/module/motion.h"
 #include "src/gcode/queue.h"
-#if HAS_FILAMENT_SENSOR
-  #include "src/feature/runout.h"
-#endif
 #if HAS_LEVELING
     #include "src/feature/bedlevel/bedlevel.h"
 #endif
+#include "src/feature/pause.h"
+#include "src/libs/stopwatch.h"
 #include "mmu2.h"
 #include "mmu2_config.h"
 #include "mmu2_error_converter.h"
@@ -220,20 +219,19 @@ void __attribute__((noinline)) MMU2::mmu_loop_inner(bool reportErrors) {
 }
 
 void MMU2::CheckFINDARunout() {
-    // Check for FINDA filament runout
     if (!FindaDetectsFilament()
         && printJobOngoing()
-        && !printingIsPaused()
-        // && !saved_printing
+        && parser.codenum != 600
+        && printingIsPaused()
         #if HAS_LEVELING
-            && !leveling_is_valid()
+            && leveling_is_valid()
         #endif
-        && !all_axes_trusted()
-        && axis_is_trusted(AxisEnum::E_AXIS)) {
+        && all_axes_homed()
+        && axis_is_trusted(AxisEnum::E_AXIS)
+    ) {
         SERIAL_ECHOLN_P("FINDA filament runout!");
         marlin_stop_and_save_print_to_ram();
-        // TODO: I don't see a comparable function in Marlin
-        // restore_print_from_ram_and_continue(0);
+        resume_print();
         if (SpoolJoin::spooljoin.isSpoolJoinEnabled() && get_current_tool() != (uint8_t)FILAMENT_UNKNOWN){ // Can't auto if F=?
             // enquecommand_front_P(PSTR("M600 AUTO")); // save print and run M600 command
             queue.enqueue_now_P(PSTR("M600 AUTO"));  // save print and run M600 command
@@ -401,8 +399,7 @@ bool MMU2::tool_change(uint8_t slot) {
         }
 
         ReportingRAII rep(CommandInProgress::ToolChange);
-        // FSensorBlockRunout blockRunout;
-        runout.reset();
+        FSensorBlockRunout blockRunout;
         planner_synchronize();
         ToolChangeCommon(slot);
     }
@@ -418,8 +415,7 @@ bool MMU2::tool_change(char code, uint8_t slot) {
     if (!WaitForMMUReady())
         return false;
 
-    // FSensorBlockRunout blockRunout;
-    runout.reset();
+    FSensorBlockRunout blockRunout;
 
     switch (code) {
     case '?': {
@@ -479,8 +475,7 @@ bool MMU2::set_filament_type(uint8_t /*slot*/, uint8_t /*type*/) {
 }
 
 void MMU2::UnloadInner() {
-    // FSensorBlockRunout blockRunout;
-    runout.reset();
+    FSensorBlockRunout blockRunout;
     filament_ramming();
 
     // we assume the printer managed to relieve filament tip from the gears,
@@ -584,10 +579,11 @@ bool MMU2::load_filament_to_nozzle(uint8_t slot) {
     {
         // used for MMU-menu operation "Load to Nozzle"
         ReportingRAII rep(CommandInProgress::ToolChange);
-        // FSensorBlockRunout blockRunout;
-        runout.reset();
+        FSensorBlockRunout blockRunout;
 
-        if (extruder != MMU2_NO_TOOL) { // we already have some filament loaded - free it + shape its tip properly
+        if (extruder != MMU2_NO_TOOL) {
+            // we already have some filament loaded
+            // free it + shape its tip properly
             filament_ramming();
         }
 
@@ -802,7 +798,6 @@ bool MMU2::manage_response(const bool move_axes, const bool turn_off_nozzle) {
 
     MARLIN_KEEPALIVE_STATE_IN_PROCESS;
 
-    // LongTimer nozzleTimeout;
     Stopwatch nozzle_timer;
 
     for (;;) {
@@ -814,20 +809,15 @@ bool MMU2::manage_response(const bool move_axes, const bool turn_off_nozzle) {
         safe_delay_keep_alive(0); // calls LogicStep() and remembers its return status
 
         if (mmu_print_saved & SavedState::CooldownPending) {
-            // if (!nozzle_timer.running()) {
             if (!nozzle_timer.isRunning()) {
                 nozzle_timer.start();
                 LogEchoEvent_P(PSTR("Cooling Timeout started"));
-
-            // TODO: The following is exactly the same feature with PAUSE_PARK_NOZZLE_TIMEOUT which is in seconds
-            // } else if (nozzle_timer.expired(DEFAULT_SAFETYTIMER_TIME_MINS * 60 * 1000ul)) { // mins->msec.
             } else if (nozzle_timer.duration() > (PAUSE_PARK_NOZZLE_TIMEOUT * 1000ul)) { // mins->msec.
                 mmu_print_saved &= ~(SavedState::CooldownPending);
                 mmu_print_saved |= SavedState::Cooldown;
                 thermal_setTargetHotend(0);
                 LogEchoEvent_P(PSTR("Heater cooldown"));
             }
-        // } else if (nozzle_timer.running()) {
         } else if (nozzle_timer.isRunning()) {
             nozzle_timer.stop();
             LogEchoEvent_P(PSTR("Cooling timer stopped"));
@@ -1125,13 +1115,19 @@ void MMU2::OnMMUProgressMsgSame(ProgressCode pc) {
                 break;
             case FilamentState::NOT_PRESENT:
                 // fsensor not triggered, continue moving extruder
-                if (!planner_any_moves()) { // Only plan a move if there is no move ongoing
-                    // Plan a very long move, where 'very long' is hundreds
-                    // of millimeters. Keep in mind though the move can't be much longer
-                    // than 450mm because the firmware will ignore too long extrusions
-                    // for safety reasons. See PREVENT_LENGTHY_EXTRUDE.
-                    // Use 350mm to be safely away from the prevention threshold
-                    extruder_move(350.0f, logic.PulleySlowFeedRate());
+                // if (!planner_any_moves()) { // Only plan a move if there is no move ongoing
+                //     // Plan a very long move, where 'very long' is hundreds
+                //     // of millimeters. Keep in mind though the move can't be much longer
+                //     // than 450mm because the firmware will ignore too long extrusions
+                //     // for safety reasons. See PREVENT_LENGTHY_EXTRUDE.
+                //     // Use 350mm to be safely away from the prevention threshold
+                //     // extruder_move(350.0f, logic.PulleySlowFeedRate());
+                // }
+                // Instead of doing a very long extrude as PrusaFirmware is doing,
+                // I think Marlin's own MMU2s code has a better approach to this
+                // by spinning the extruder indefinitelly...
+                while (!planner_any_moves()) {
+                    extruder_move(0.25, logic.PulleySlowFeedRate(), false);
                 }
                 break;
             default:
