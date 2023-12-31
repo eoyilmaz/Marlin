@@ -35,7 +35,7 @@
 #endif
 
 #if HAS_PRUSA_MMU3
-  #include "../../../feature/mmu_from_prusa/mmu2.h"
+  #include "../../../feature/mmu3/mmu2.h"
   #if ENABLED(MMU2_MENUS)
     #include "../../../lcd/menu/menu_mmu2.h"
   #endif

@@ -25,7 +25,7 @@
 
 #if HAS_PRUSA_MMU3
   #include "../../gcode.h"
-  #include "../../../feature/mmu_from_prusa/mmu2.h"
+  #include "../../../feature/mmu3/mmu2.h"
 
 
 // Common gcode shared by the gcodes. This saves some flash memory

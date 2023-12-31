@@ -26,7 +26,7 @@
 #include "../../gcode.h"
 
 #if HAS_PRUSA_MMU3
-  #include "../../../feature/mmu_from_prusa/mmu2.h"
+  #include "../../../feature/mmu3/mmu2.h"
 #elif HAS_PRUSA_MMU2
   #include "../../../feature/mmu/mmu2.h"
 #endif

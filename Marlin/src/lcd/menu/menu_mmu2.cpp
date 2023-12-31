@@ -27,7 +27,7 @@
 #include "../../MarlinCore.h"
 
 #if HAS_PRUSA_MMU3
-  #include "../../feature/mmu_from_prusa/mmu2.h"
+  #include "../../feature/mmu3/mmu2.h"
 #else
   #include "../../feature/mmu/mmu2.h"
 #endif
