@@ -43,7 +43,7 @@ void waitForHotendTargetTemp(uint16_t delay, F f) {
 
 void WaitForHotendTargetTempBeep() {
     waitForHotendTargetTemp(3000, []{ });
-    MakeSound(Prompt);
+    // MakeSound(Prompt);
 }
 
 MMU2 mmu2;
@@ -487,7 +487,7 @@ void MMU2::UnloadInner() {
             break;
         IncrementMMUFails();
     }
-    MakeSound(Confirm);
+    // MakeSound(Confirm);
 
     // no active tool
     SetCurrentTool(MMU2_NO_TOOL);
@@ -534,7 +534,7 @@ bool MMU2::cut_filament(uint8_t slot, bool enableFullScreenMsg /*= true*/) {
         CutFilamentInner(slot);
         SetCurrentTool(MMU2_NO_TOOL);
         tool_change_extruder = MMU2_NO_TOOL;
-        MakeSound(SoundType::Confirm);
+        // MakeSound(SoundType::Confirm);
     }
     ScreenUpdateEnable();
     return true;
@@ -563,7 +563,7 @@ bool MMU2::load_filament(uint8_t slot) {
                 break;
             IncrementMMUFails();
         }
-        MakeSound(SoundType::Confirm);
+        // MakeSound(SoundType::Confirm);
     }
     ScreenUpdateEnable();
     return true;
@@ -591,7 +591,7 @@ bool MMU2::load_filament_to_nozzle(uint8_t slot) {
 
         // Finish loading to the nozzle with finely tuned steps.
         execute_load_to_nozzle_sequence();
-        MakeSound(Confirm);
+        // MakeSound(Confirm);
     }
     ScreenUpdateEnable();
     return true;
@@ -619,7 +619,7 @@ bool MMU2::eject_filament(uint8_t slot, bool enableFullScreenMsg /* = true */) {
         }
         SetCurrentTool(MMU2_NO_TOOL);
         tool_change_extruder = MMU2_NO_TOOL;
-        MakeSound(Confirm);
+        // MakeSound(Confirm);
     }
     ScreenUpdateEnable();
     return true;
