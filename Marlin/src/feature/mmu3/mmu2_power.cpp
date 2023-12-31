@@ -28,7 +28,7 @@ void power_off() {
 void reset() {
 #if PIN_EXISTS(MMU2_RST) // HW - pulse reset pin
     WRITE(MMU2_RST_PIN, 0);
-    _delay_us(100);
+    safe_delay(100);
     WRITE(MMU2_RST_PIN, 1);
 #else
     mmu2.Reset(MMU2::Software); // @@TODO needs to be redesigned, this power implementation shall not know anything about the MMU itself
