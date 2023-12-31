@@ -4345,6 +4345,11 @@
     { 10.0, 1393 }, \
     {  4.4,  871 }, \
     { 10.0,  198 }
+    // #define MMU2_LOAD_TO_NOZZLE_SEQUENCE \
+    //     { MMU2_EXTRUDER_PTFE_LENGTH,       810.0F / 60.F}, \
+    //     { MMU2_EXTRUDER_HEATBREAK_LENGTH,  198.0F / 60.F}
+    //     // { MMU2_EXTRUDER_PTFE_LENGTH,       810.0F / 60.F}, // feed rate = 13.5mm/s - Load fast while not at heatbreak
+    //     // { MMU2_EXTRUDER_HEATBREAK_LENGTH,  198.0F / 60.F}  // feed rate = 3.3mm/s  - Load slower once filament reaches heatbreak
 
   #define MMU2_RAMMING_SEQUENCE \
     {   1.0, 1000 }, \
@@ -4358,6 +4363,25 @@
     {  10.0,  700 }, \
     { -10.0,  400 }, \
     { -50.0, 2000 }
+    // #define MMU2_RAMMING_SEQUENCE \
+    //     { 0.2816F,  1339.0F / 60.F}, \
+    //     { 0.3051F,  1451.0F / 60.F}, \
+    //     { 0.3453F,  1642.0F / 60.F}, \
+    //     { 0.3990F,  1897.0F / 60.F}, \
+    //     { 0.4761F,  2264.0F / 60.F}, \
+    //     { 0.5767F,  2742.0F / 60.F}, \
+    //     { 0.5691F,  3220.0F / 60.F}, \
+    //     { 0.1081F,  3220.0F / 60.F}, \
+    //     { 0.7644F,  3635.0F / 60.F}, \
+    //     { 0.8248F,  3921.0F / 60.F}, \
+    //     { 0.8483F,  4033.0F / 60.F}, \
+    //     { -15.0F,   6000.0F / 60.F}, \
+    //     { -24.5F,   1200.0F / 60.F}, \
+    //     { -7.0F,    600.0F / 60.F}, \
+    //     { -3.5F,    360.0F / 60.F}, \
+    //     { 20.0F,    454.0F / 60.F}, \
+    //     { -20.0F,   303.0F / 60.F}, \
+    //     { -35.0F,   2000.0F / 60.F}
 
   /**
    * Using a sensor like the MMU2S
@@ -4399,16 +4423,12 @@
     //#define MMU_IR_UNLOAD_MOVE
   #elif HAS_PRUSA_MMU3
 
-    // Settings for filament load / unload from the LCD menu.
-    // This is for Prusa MK3-style extruders. Customize for your hardware.
-    #define MMU2_FILAMENTCHANGE_EJECT_FEED 80.0
-
     // Nominal distance from the extruder gear to the nozzle tip is 87mm
     // However, some slipping may occur and we need separate distances for
     // LoadToNozzle and ToolChange.
     // - +5mm seemed good for LoadToNozzle,
     // - but too much (made blobs) for a ToolChange
-    #define MMU2_LOAD_TO_NOZZLE_LENGTH 87.0F + 5.0F
+    #define MMU2_LOAD_TO_NOZZLE_LENGTH 58.0F + 5.0F // 87.0F + 5.0F
 
     // As discussed with our PrusaSlicer profile specialist
     // - ToolChange shall not try to push filament into the very tip of the nozzle
@@ -4421,8 +4441,8 @@
     #define MMU2_LOAD_DISTANCE_PAST_GEARS 5 // mm
     #define MMU2_TOOL_CHANGE_LOAD_LENGTH MMU2_FILAMENT_SENSOR_POSITION + MMU2_LOAD_DISTANCE_PAST_GEARS // mm
 
-    #define MMU2_EXTRUDER_PTFE_LENGTH 42.3f // mm
-    #define MMU2_EXTRUDER_HEATBREAK_LENGTH  17.7f // mm
+    #define MMU2_EXTRUDER_PTFE_LENGTH 19.0f //42.3f // mm
+    #define MMU2_EXTRUDER_HEATBREAK_LENGTH  14.0f // 17.7f // mm
 
     #define MMU2_LOAD_TO_NOZZLE_FEED_RATE 20.0F // mm/s
     #define MMU2_UNLOAD_TO_FINDA_FEED_RATE 120.0F // mm/s
@@ -4440,32 +4460,6 @@
     #define MMU2_CHECK_FILAMENT_PRESENCE_EXTRUSION_LENGTH MMU2_EXTRUDER_PTFE_LENGTH + MMU2_EXTRUDER_HEATBREAK_LENGTH + MMU2_VERIFY_LOAD_TO_NOZZLE_TWEAK + MMU2_FILAMENT_SENSOR_POSITION
 
     #define MMU2_NO_TOOL (uint8_t)99
-
-    // #define MMU2_RAMMING_SEQUENCE \
-    //     { 0.2816F,  1339.0F / 60.F}, \
-    //     { 0.3051F,  1451.0F / 60.F}, \
-    //     { 0.3453F,  1642.0F / 60.F}, \
-    //     { 0.3990F,  1897.0F / 60.F}, \
-    //     { 0.4761F,  2264.0F / 60.F}, \
-    //     { 0.5767F,  2742.0F / 60.F}, \
-    //     { 0.5691F,  3220.0F / 60.F}, \
-    //     { 0.1081F,  3220.0F / 60.F}, \
-    //     { 0.7644F,  3635.0F / 60.F}, \
-    //     { 0.8248F,  3921.0F / 60.F}, \
-    //     { 0.8483F,  4033.0F / 60.F}, \
-    //     { -15.0F,   6000.0F / 60.F}, \
-    //     { -24.5F,   1200.0F / 60.F}, \
-    //     { -7.0F,    600.0F / 60.F}, \
-    //     { -3.5F,    360.0F / 60.F}, \
-    //     { 20.0F,    454.0F / 60.F}, \
-    //     { -20.0F,   303.0F / 60.F}, \
-    //     { -35.0F,   2000.0F / 60.F}
-
-    // #define MMU2_LOAD_TO_NOZZLE_SEQUENCE \
-    //     { MMU2_EXTRUDER_PTFE_LENGTH,       810.0F / 60.F}, \
-    //     { MMU2_EXTRUDER_HEATBREAK_LENGTH,  198.0F / 60.F}
-    //     // { MMU2_EXTRUDER_PTFE_LENGTH,       810.0F / 60.F}, // feed rate = 13.5mm/s - Load fast while not at heatbreak
-    //     // { MMU2_EXTRUDER_HEATBREAK_LENGTH,  198.0F / 60.F}  // feed rate = 3.3mm/s  - Load slower once filament reaches heatbreak
 
   #else
 
