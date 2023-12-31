@@ -48,7 +48,7 @@ bool SpoolJoin::isSpoolJoinEnabled()
     // } else {
     //     return false;
     // }
-    return true;
+    return false;
 }
 
 void SpoolJoin::setSlot(uint8_t slot)
