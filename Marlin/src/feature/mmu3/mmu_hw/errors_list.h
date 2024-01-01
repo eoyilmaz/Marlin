@@ -3,23 +3,17 @@
 // BEWARE - this file shall be included only into mmu2_error_converter.cpp, not anywhere else!
 #pragma once
 #include "inttypes.h"
-
 #include "src/core/language.h"
-
-// eoyilmaz: This will probably need to be replaced with MarlinUI.
-// #include "../lcd.h"
 #include "src/lcd/marlinui.h"
-
 #include <avr/pgmspace.h>
 #include "buttons.h"
-
 #include "../strlen_cx.h"
 #include "../mmu2_supported_version.h"
 #include "../messages.h"
+#include "../ultralcd.h"
 
 // // TODO: This needs to be replaced with whatever we are using to translate text
 // #define PSTR(s) (s)
-#define LCD_STR_ARROW_2_DOWN "\x88"
 
 namespace MMU2 {
 

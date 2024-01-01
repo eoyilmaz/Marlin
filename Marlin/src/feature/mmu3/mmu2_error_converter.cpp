@@ -1,8 +1,8 @@
+#include <stdio.h>
+#include "src/core/language.h"
 #include "mmu2_error_converter.h"
 #include "mmu_hw/error_codes.h"
 #include "mmu_hw/errors_list.h"
-#include "src/core/language.h"
-#include <stdio.h>
 
 namespace MMU2 {
 

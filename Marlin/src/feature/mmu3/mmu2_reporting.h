@@ -6,12 +6,6 @@
 #include "mmu_hw/progress_codes.h"
 
 
-// TODO: I just needed to define these, later when we implement proper menus,
-//       we'll remove them...
-#define LCD_LEFT_BUTTON_CHOICE 0
-#define LCD_MIDDLE_BUTTON_CHOICE 1
-#define LCD_RIGHT_BUTTON_CHOICE 2
-
 namespace MMU2 {
 
 enum CommandInProgress : uint8_t {
