@@ -27,7 +27,9 @@
 #include "../../MarlinCore.h"
 
 #if HAS_PRUSA_MMU3
-  #include "../../feature/mmu3/mmu2.h"
+  #include "src/feature/mmu3/mmu2.h"
+  #include "src/feature/mmu3/mmu2_reporting.h"
+  #include "src/feature/mmu3/SpoolJoin.h"
 #else
   #include "../../feature/mmu/mmu2.h"
 #endif
@@ -97,6 +99,15 @@ void _mmu2_eject_filament(uint8_t index) {
   #endif
 }
 
+void _mmu2_cut_filament(uint8_t index) {
+  ui.reset_status();
+  ui.return_to_status();
+  ui.status_printf(0, GET_TEXT_F(MSG_MMU2_CUTTING_FILAMENT), int(index + 1));
+  #if HAS_PRUSA_MMU3
+    if (MMU2::mmu2.cut_filament(index, true)) ui.reset_status();
+  #endif
+}
+
 void action_mmu2_unload_filament() {
   ui.reset_status();
   ui.return_to_status();
@@ -114,6 +125,13 @@ void menu_mmu2_eject_filament() {
   START_MENU();
   BACK_ITEM(MSG_MMU2_MENU);
   EXTRUDER_LOOP() ACTION_ITEM_N(e, MSG_MMU2_FILAMENT_N, []{ _mmu2_eject_filament(MenuItemBase::itemIndex); });
+  END_MENU();
+}
+
+void menu_mmu2_cut_filament() {
+  START_MENU();
+  BACK_ITEM(MSG_MMU2_MENU);
+  EXTRUDER_LOOP() ACTION_ITEM_N(e, MSG_MMU2_FILAMENT_N, []{ _mmu2_cut_filament(MenuItemBase::itemIndex); });
   END_MENU();
 }
 
@@ -140,6 +158,11 @@ void menu_mmu2() {
   SUBMENU(MSG_MMU2_LOAD_FILAMENT, menu_mmu2_load_filament);
   SUBMENU(MSG_MMU2_LOAD_TO_NOZZLE, menu_mmu2_load_to_nozzle);
   SUBMENU(MSG_MMU2_EJECT_FILAMENT, menu_mmu2_eject_filament);
+  #if HAS_PRUSA_MMU3
+  if (MMU2::cutter_enabled()){
+    SUBMENU(MSG_MMU2_CUT_FILAMENT, menu_mmu2_cut_filament);
+  }
+  #endif
   ACTION_ITEM(MSG_MMU2_UNLOAD_FILAMENT, action_mmu2_unload_filament);
   ACTION_ITEM(MSG_MMU2_RESET, action_mmu2_reset);
   END_MENU();
@@ -193,11 +216,17 @@ void menu_mmu2_pause() {
   END_MENU();
 }
 
-void mmu2_M600() {
-  ui.defer_status_screen();
-  ui.goto_screen(menu_mmu2_pause);
-  wait_for_mmu_menu = true;
-  while (wait_for_mmu_menu) idle();
+void mmu2_M600(bool automatic) {
+  // uint8_t slot;
+  // if (automatic) {
+  //   slot = SpoolJoin::spooljoin.nextSlot();
+  //   MMU2::mmu2.load_filament_to_nozzle(slot);
+  // } else {
+    ui.defer_status_screen();
+    ui.goto_screen(menu_mmu2_pause);
+    wait_for_mmu_menu = true;
+    while (wait_for_mmu_menu) idle();
+  // }
 }
 
 uint8_t mmu2_choose_filament() {

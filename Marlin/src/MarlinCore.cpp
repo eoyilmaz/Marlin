@@ -231,6 +231,7 @@
 
 #if HAS_PRUSA_MMU3
   #include "feature/mmu3/mmu2.h"
+  #include "feature/mmu3/SpoolJoin.h"
 #elif HAS_PRUSA_MMU2
   #include "feature/mmu/mmu2.h"
 #elif HAS_PRUSA_MMU1
@@ -1580,6 +1581,7 @@ void setup() {
 
   #if HAS_PRUSA_MMU3
     SETUP_RUN(MMU2::mmu2.Start());
+    SETUP_RUN(SpoolJoin::spooljoin.initSpoolJoinStatus());
   #elif HAS_PRUSA_MMU2
     SETUP_RUN(mmu2.init());
   #endif

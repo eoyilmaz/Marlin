@@ -718,12 +718,14 @@ namespace LanguageNarrow_en {
   LSTR MSG_MMU2_LOAD_FILAMENT             = _UxGT("MMU Load");
   LSTR MSG_MMU2_LOAD_ALL                  = _UxGT("MMU Load All");
   LSTR MSG_MMU2_LOAD_TO_NOZZLE            = _UxGT("MMU Load to Nozzle");
+  LSTR MSG_MMU2_CUT_FILAMENT              = _UxGT("MMU Cut");
   LSTR MSG_MMU2_EJECT_FILAMENT            = _UxGT("MMU Eject");
   LSTR MSG_MMU2_EJECT_FILAMENT_N          = _UxGT("MMU Eject ~");
   LSTR MSG_MMU2_UNLOAD_FILAMENT           = _UxGT("MMU Unload");
   LSTR MSG_MMU2_LOADING_FILAMENT          = _UxGT("Filament %i Load...");
-  LSTR MSG_MMU2_EJECTING_FILAMENT         = _UxGT("Filament Eject...");
-  LSTR MSG_MMU2_UNLOADING_FILAMENT        = _UxGT("Filament Unload...");
+  LSTR MSG_MMU2_CUTTING_FILAMENT          = _UxGT("Filament %i Cut...");
+  LSTR MSG_MMU2_EJECTING_FILAMENT         = _UxGT("Filament %i Eject...");
+  LSTR MSG_MMU2_UNLOADING_FILAMENT        = _UxGT("Filament %i Unload...");
   LSTR MSG_MMU2_ALL                       = _UxGT("All");
   LSTR MSG_MMU2_FILAMENT_N                = _UxGT("Filament ~");
   LSTR MSG_MMU2_RESET                     = _UxGT("Reset MMU");

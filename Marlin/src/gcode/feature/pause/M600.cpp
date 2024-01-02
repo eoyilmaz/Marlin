@@ -172,7 +172,8 @@ void GcodeSuite::M600() {
     }
     else {
       #if ENABLED(MMU2_MENUS)
-        mmu2_M600();
+        // mmu2_M600(parser.seenval('AUTO'));
+        mmu2_M600(false);
         resume_print(0, 0, 0, beep_count, 0 DXC_PASS);
       #endif
     }
