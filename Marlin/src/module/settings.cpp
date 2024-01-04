@@ -36,7 +36,7 @@
  */
 
 // Change EEPROM version if the structure changes
-#define EEPROM_VERSION "V89"
+#define EEPROM_VERSION "V90"
 #define EEPROM_OFFSET 100
 
 // Check the integrity of data offsets.
@@ -180,6 +180,12 @@
 
 #if ENABLED(HOTEND_IDLE_TIMEOUT)
   #include "../feature/hotend_idle.h"
+#endif
+
+#if HAS_PRUSA_MMU3
+  #include "../feature/mmu3/mmu2.h"
+  #include "../feature/mmu3/SpoolJoin.h"
+  #include "../feature/mmu3/mmu2_reporting.h"
 #endif
 
 #pragma pack(push, 1) // No padding between variables
@@ -639,6 +645,22 @@ typedef struct SettingsDataStruct {
   //
   #if ENABLED(NONLINEAR_EXTRUSION)
     ne_coeff_t stepper_ne;                              // M592 A B C
+  #endif
+
+  //
+  // MMU3
+  //
+  #if HAS_PRUSA_MMU3
+    bool spool_join_enabled;      // EEPROM_SPOOL_JOIN
+    uint16_t fail_total_num;      // EEPROM_MMU_FAIL_TOT
+    uint8_t fail_num;             // EEPROM_MMU_FAIL
+    uint16_t load_fail_total_num; // EEPROM_MMU_LOAD_FAIL_TOT
+    uint8_t load_fail_num;        // EEPROM_MMU_LOAD_FAIL
+    uint32_t tool_change_counter; // EEPROM_MMU_MATERIAL_CHANGES
+    uint8_t cutter_mode;          // EEPROM_MMU_CUTTER_ENABLED
+    uint8_t stealth_mode;         // EEPROM_MMU_STEALTH
+    bool mmu_hw_enabled;          // EEPROM_MMU_ENABLED
+    // uint32_t material_changes  
   #endif
 
 } SettingsData;
@@ -1744,6 +1766,22 @@ void MarlinSettings::postprocess() {
     #endif
 
     //
+    // MMU3
+    //
+    #if HAS_PRUSA_MMU3
+      EEPROM_WRITE(SpoolJoin::spooljoin.enabled); // EEPROM_SPOOL_JOIN
+      // for testing purposes fill with default values
+      EEPROM_WRITE(MMU2::operation_statistics.fail_total_num); //EEPROM_MMU_FAIL_TOT
+      EEPROM_WRITE(MMU2::operation_statistics.fail_num); // EEPROM_MMU_FAIL
+      EEPROM_WRITE(MMU2::operation_statistics.load_fail_total_num); // EEPROM_MMU_LOAD_FAIL_TOT
+      EEPROM_WRITE(MMU2::operation_statistics.load_fail_num); // EEPROM_MMU_LOAD_FAIL
+      EEPROM_WRITE(MMU2::operation_statistics.tool_change_counter); // EEPROM_MMU_MATERIAL_CHANGES
+      EEPROM_WRITE(MMU2::mmu2.cutter_mode); // EEPROM_MMU_CUTTER_ENABLED
+      EEPROM_WRITE(MMU2::mmu2.stealth_mode); // EEPROM_MMU_STEALTH
+      EEPROM_WRITE(MMU2::mmu2.mmu_hw_enabled); // EEPROM_MMU_ENABLED
+    #endif
+
+    //
     // Report final CRC and Data Size
     //
     if (eeprom_error == ERR_EEPROM_NOERR) {
@@ -2825,6 +2863,38 @@ void MarlinSettings::postprocess() {
       #endif
 
       //
+      // MMU3
+      //
+      #if HAS_PRUSA_MMU3
+        SpoolJoin::spooljoin.epprom_addr = eeprom_index;
+        EEPROM_READ(SpoolJoin::spooljoin.enabled);  // EEPROM_SPOOL_JOIN
+
+        MMU2::operation_statistics.fail_total_num_addr = eeprom_index;
+        EEPROM_READ(MMU2::operation_statistics.fail_total_num); //EEPROM_MMU_FAIL_TOT
+
+        MMU2::operation_statistics.fail_num_addr = eeprom_index;
+        EEPROM_READ(MMU2::operation_statistics.fail_num); // EEPROM_MMU_FAIL;
+
+        MMU2::operation_statistics.load_fail_total_num_addr = eeprom_index;
+        EEPROM_READ(MMU2::operation_statistics.load_fail_total_num); // EEPROM_MMU_LOAD_FAIL_TOT
+
+        MMU2::operation_statistics.load_fail_num_addr = eeprom_index;
+        EEPROM_READ(MMU2::operation_statistics.load_fail_num); // EEPROM_MMU_LOAD_FAIL
+
+        MMU2::operation_statistics.tool_change_counter_addr = eeprom_index;
+        EEPROM_READ(MMU2::operation_statistics.tool_change_counter); // EEPROM_MMU_MATERIAL_CHANGES
+
+        MMU2::mmu2.cutter_mode_addr = eeprom_index;
+        EEPROM_READ(MMU2::mmu2.cutter_mode); // EEPROM_MMU_CUTTER_ENABLED
+
+        MMU2::mmu2.stealth_mode_addr = eeprom_index;
+        EEPROM_READ(MMU2::mmu2.stealth_mode); // EEPROM_MMU_STEALTH
+
+        MMU2::mmu2.mmu_hw_enabled_addr = eeprom_index;
+        EEPROM_READ(MMU2::mmu2.mmu_hw_enabled); // EEPROM_MMU_ENABLED
+      #endif
+
+      //
       // Validate Final Size and CRC
       //
       const uint16_t eeprom_total = eeprom_index - (EEPROM_OFFSET);
@@ -3636,6 +3706,21 @@ void MarlinSettings::reset() {
   #endif
 
   //
+  // MMU Settings
+  //
+  #if HAS_PRUSA_MMU3
+      SpoolJoin::spooljoin.enabled = false;
+      MMU2::operation_statistics.fail_total_num = 0;
+      MMU2::operation_statistics.fail_num = 0;
+      MMU2::operation_statistics.load_fail_total_num = 0;
+      MMU2::operation_statistics.load_fail_num = 0;
+      MMU2::operation_statistics.tool_change_counter = 0;
+      MMU2::mmu2.cutter_mode = 0;
+      MMU2::mmu2.stealth_mode = 0;
+      MMU2::mmu2.mmu_hw_enabled = true;
+  #endif
+
+  //
   // Hotend Idle Timeout
   //
   TERN_(HOTEND_IDLE_TIMEOUT, hotend_idle.cfg.set_defaults());
@@ -3952,6 +4037,62 @@ void MarlinSettings::reset() {
     // Model predictive control
     //
     TERN_(MPCTEMP, gcode.M306_report(forReplay));
+
+    //
+    // MMU
+    //
+    #if HAS_PRUSA_MMU3
+      CONFIG_ECHO_HEADING("MMU3 Operational Stats");
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("MMU                 : ");
+      serialprintln_onoff(MMU2::mmu2.mmu_hw_enabled);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Stealth Mode        : ");
+      serialprintln_onoff(MMU2::mmu2.stealth_mode);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Cutter              : ");
+      #ifdef MMU_HAS_CUTTER
+        if(MMU2::mmu2.cutter_mode == 0){
+          serialprintln_onoff(false);
+        } else {
+          serialprintln_onoff(true);
+        }
+      #else
+        SERIAL_ECHOLNPGM("Disabled");
+      #endif
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("SpoolJoin           : ");
+      serialprintln_onoff(SpoolJoin::spooljoin.enabled);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Tool Changes (Total): ");
+      SERIAL_ECHOLN(MMU2::operation_statistics.tool_change_counter);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Fails (Total)       : ");
+      SERIAL_ECHOLN(MMU2::operation_statistics.fail_total_num);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Fails (Current)     : ");
+      SERIAL_ECHOLN(MMU2::operation_statistics.fail_num);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Load Fails (Total)  : ");
+      SERIAL_ECHOLN(MMU2::operation_statistics.load_fail_total_num);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Load Fails (Current): ");
+      SERIAL_ECHOLN(MMU2::operation_statistics.load_fail_num);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Power Fails         : ");
+      SERIAL_ECHOLN(MMU2::mmu2.TMCFailures());
+
+    #endif
   }
 
 #endif // !DISABLE_M503

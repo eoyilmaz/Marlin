@@ -25,12 +25,10 @@ class LcdUpdateDisabler
 public:
     LcdUpdateDisabler(): m_updateEnabled(ui.lcdDrawUpdate)
     {
-        // lcd_update_enable(false);
         ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_NONE;
     }
     ~LcdUpdateDisabler()
     {
-        // lcd_update_enable(m_updateEnabled);
         ui.lcdDrawUpdate = m_updateEnabled;
     }
 

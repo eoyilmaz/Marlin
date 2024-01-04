@@ -25,7 +25,8 @@
 
 #if HAS_PRUSA_MMU3
   #include "../../gcode.h"
-  #include "../../../feature/mmu3/mmu2.h"
+  #include "src/module/settings.h"
+  #include "src/feature/mmu3/mmu2.h"
 
 
 // Common gcode shared by the gcodes. This saves some flash memory
@@ -44,8 +45,7 @@ static void gcodes_M704_M705_M706(uint16_t gcode)
             break;
         case 706:
 #ifdef MMU_HAS_CUTTER
-            // TOOD: This needs access to persistentStore, I need guidence with this
-            if (eeprom_read_byte((uint8_t*)EEPROM_MMU_CUTTER_ENABLED) != 0){
+            if (MMU2::mmu2.cutter_mode > 0){
                 MMU2::mmu2.cut_filament(mmuSlotIndex);
             }
 #endif // MMU_HAS_CUTTER
@@ -186,16 +186,37 @@ M709    - Serial message if en- or disabled
 void GcodeSuite::M709() {
     if (parser.seenval('S'))
     {
-        switch (parser.byteval('S', -1))
-        {
+        switch (parser.byteval('S', -1)){
         case 0:
-            // TODO: This requires PersistentStore, I need guidence on this
             // eeprom_update_byte((uint8_t *)EEPROM_MMU_ENABLED, false);
+            MMU2::mmu2.mmu_hw_enabled = false;
+
+            // save mmu_hw_enabled to eeprom
+            persistentStore.access_start();
+            persistentStore.write_data(
+                MMU2::mmu2.mmu_hw_enabled_addr,
+                MMU2::mmu2.mmu_hw_enabled
+            );
+            persistentStore.access_finish();
+
+            settings.save();
+
             MMU2::mmu2.Stop();
             break;
         case 1:
-            // TODO: This requires PersistentStore, I need guidence on this
             // eeprom_update_byte((uint8_t *)EEPROM_MMU_ENABLED, true);
+            MMU2::mmu2.mmu_hw_enabled = true;
+
+            // save mmu_hw_enabled to eeprom
+            persistentStore.access_start();
+            persistentStore.write_data(
+                MMU2::mmu2.mmu_hw_enabled_addr,
+                MMU2::mmu2.mmu_hw_enabled
+            );
+            persistentStore.access_finish();
+
+            settings.save();
+
             MMU2::mmu2.Start();
             break;
         default:

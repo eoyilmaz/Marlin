@@ -1,4 +1,6 @@
 #include "src/MarlinCore.h"
+// #include "eeprom.h"
+#include "src/lcd/marlinui.h"
 #include "src/core/language.h"
 #include "src/module/planner.h"
 #include "src/module/motion.h"
@@ -48,6 +50,13 @@ void WaitForHotendTargetTempBeep() {
 
 MMU2 mmu2;
 
+uint8_t MMU2::cutter_mode;      // initialized by settings.load
+int MMU2::cutter_mode_addr;     // initialized by settings.load
+uint8_t MMU2::stealth_mode;     // initialized by settings.load
+int MMU2::stealth_mode_addr;    // initialized by settings.load
+bool MMU2::mmu_hw_enabled;      // initialized by settings.load
+int MMU2::mmu_hw_enabled_addr;  // initialized by settings.load
+
 MMU2::MMU2()
     : logic(MMU2_TOOL_CHANGE_LOAD_LENGTH, MMU2_LOAD_TO_NOZZLE_FEED_RATE)
     , extruder(MMU2_NO_TOOL)
@@ -66,10 +75,7 @@ MMU2::MMU2()
 void MMU2::Status() {
     // Useful information to see during bootup and change state
     SERIAL_ECHOPGM("MMU is ");
-    // uint8_t status = eeprom_init_default_byte((uint8_t*)EEPROM_MMU_ENABLED, 0);
-    // TODO: we need to query the data from PersistentStore
-    uint8_t status = 1;
-    if (status == 1) {
+    if (mmu_hw_enabled) {
         SERIAL_ECHOLN_P(_O(MSG_ON));
     } else {
         SERIAL_ECHOLN_P(_O(MSG_OFF));
@@ -381,6 +387,19 @@ void MMU2::ToolChangeCommon(uint8_t slot) {
     SpoolJoin::spooljoin.setSlot(slot);
 
     ++toolchange_counter;
+
+    // also increment the total number of tool changes
+    operation_statistics.tool_change_counter += 1;
+
+    // save tool_change_counter to eeprom
+    persistentStore.access_start();
+    persistentStore.write_data(
+        operation_statistics.tool_change_counter_addr,
+        operation_statistics.tool_change_counter
+    );
+    persistentStore.access_finish();
+    settings.save();
+
 }
 
 bool MMU2::tool_change(uint8_t slot) {

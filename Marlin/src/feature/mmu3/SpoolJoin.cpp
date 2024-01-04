@@ -1,12 +1,16 @@
 #include "SpoolJoin.h"
 #include "src/MarlinCore.h"
+#include "src/module/settings.h"
 #include "eeprom.h"
 #include "messages.h"
 #include "src/core/language.h"
 
+
 namespace SpoolJoin {
 
 SpoolJoin spooljoin;
+bool SpoolJoin::enabled;  // Initialized by settings.load
+int SpoolJoin::epprom_addr; // Initialized by settings.load
 
 SpoolJoin::SpoolJoin()
     : currentMMUSlot(0)
@@ -16,39 +20,32 @@ SpoolJoin::SpoolJoin()
 void SpoolJoin::initSpoolJoinStatus()
 {
     // Useful information to see during bootup
-    SERIAL_ECHOPGM("SpoolJoin is ");
-    // uint8_t status = eeprom_init_default_byte((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Disabled);
-    // TODO: I need help with this...
-    // uint8_t status = persistentStore.read_data((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Disabled);
-    uint8_t status = 1;
-    if (status == (uint8_t)EEPROM::Enabled)
-    {
-        SERIAL_ECHOLN_P(MSG_ON + 2);
+    if (enabled){
+        SERIAL_ECHOLNPGM("SpoolJoin is On");
     } else {
-        SERIAL_ECHOLN_P(MSG_OFF + 2);
+        SERIAL_ECHOLNPGM("SpoolJoin is Off");
     }
 }
 
 void SpoolJoin::toggleSpoolJoin()
 {
-    // TODO: This uses persistentStore, I need guidance on this
-    // if (eeprom_read_byte((uint8_t*)EEPROM_SPOOL_JOIN) == (uint8_t)EEPROM::Disabled)
-    // {
-    //     eeprom_write_byte((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Enabled);
-    // } else {
-    //     eeprom_write_byte((uint8_t*)EEPROM_SPOOL_JOIN, (uint8_t)EEPROM::Disabled);
-    // }
+    // Toggle enabled value.
+    enabled = !enabled;
+
+    // Following Prusa's implementation let's save the value to the EEPROM
+    // settings.save(); // This saves all the settings and probably very slow.
+
+    // instead of saving all the settings,
+    // save only the portion that contains the SpoolJoin data.
+    persistentStore.access_start();
+    persistentStore.write_data(epprom_addr, enabled);
+    persistentStore.access_finish();
 }
 
 bool SpoolJoin::isSpoolJoinEnabled()
 {
-    // TODO: This uses persistentStore, I need guidance on this
-    // if(eeprom_read_byte((uint8_t*)EEPROM_SPOOL_JOIN) == (uint8_t)EEPROM::Enabled) {
-    //     return true;
-    // } else {
-    //     return false;
-    // }
-    return false;
+    // the enable var is initialized by settings.load()
+    return enabled;
 }
 
 void SpoolJoin::setSlot(uint8_t slot)

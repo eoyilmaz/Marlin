@@ -19,6 +19,28 @@ enum CommandInProgress : uint8_t {
     UnloadFilament = 'U',
 };
 
+/**
+ * Data class for MMU operation statistics.
+ * 
+ * This is used to load/save data from/to EEPROM.
+ * The data is initialized by the settings.load() method.
+*/
+class OperationStatistics {
+public:
+    static uint16_t fail_total_num;           // total failures
+    static uint8_t  fail_num;                 // fails during print
+    static uint16_t load_fail_total_num;      // total load failures
+    static uint8_t  load_fail_num;            // load failures during print
+    static uint32_t tool_change_counter;      // number of total tool changes
+    static int      fail_total_num_addr;      // total failures EEPROM addr
+    static int      fail_num_addr;            // fails during print EEPROM addr
+    static int      load_fail_total_num_addr; // total load failures EEPROM addr
+    static int      load_fail_num_addr;       // load failures during print EEPROM addr
+    static int      tool_change_counter_addr; // number of total tool changes EEPROM addr
+};
+
+extern OperationStatistics operation_statistics;
+
 /// Called at the begin of every MMU operation
 void BeginReport(CommandInProgress cip, ProgressCode ec);
 

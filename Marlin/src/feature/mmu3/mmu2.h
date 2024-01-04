@@ -246,6 +246,16 @@ public:
         printerButtonOperation = Buttons::NoButton;
     }
 
+    static uint8_t cutter_mode;     // mode 0:disabled | 1:enabled | 2:always (EXPERIMENTAL)
+    static int cutter_mode_addr;    // EEPROM addr for cutter enabled setting
+    static uint8_t stealth_mode;    // stealth mode
+    static int stealth_mode_addr;   // EEPROM addr for stealth_mode setting
+    static bool mmu_hw_enabled;     // MMU hardware can be Enabled/Disabled
+                                    // with the M709 S0 or M709 S1 commands
+                                    // and the last state is stored in the
+                                    // EEPROM
+    static int mmu_hw_enabled_addr; // EEPROM addr for mmu_hw_enabled
+
 #ifndef UNITTEST
 private:
 #endif

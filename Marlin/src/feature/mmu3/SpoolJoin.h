@@ -17,6 +17,10 @@ public:
         Empty = 0xFF ///< EEPROM has not been set before and all bits are 1 (0xFF) - either a new printer or user erased the memory
     };
 
+    // @brief Contrary to Prusa's implementation we store the enabled status in a variable
+    static int epprom_addr;
+    static bool enabled;
+
     /// @brief Called when EEPROM is ready to be read
     void initSpoolJoinStatus();
 

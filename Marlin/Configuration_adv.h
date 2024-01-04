@@ -4477,6 +4477,8 @@
     // filament sensor reading flickers or filament is jammed.
     #define MMU2_CHECK_FILAMENT_PRESENCE_EXTRUSION_LENGTH MMU2_EXTRUDER_PTFE_LENGTH + MMU2_EXTRUDER_HEATBREAK_LENGTH + MMU2_VERIFY_LOAD_TO_NOZZLE_TWEAK + MMU2_FILAMENT_SENSOR_POSITION
 
+    #define MMU_HAS_CUTTER // Enable cutter related functionalities
+    //#define MMU_FORCE_STEALTH_MODE // When defined forces the stealth mode and disables menu item
     #define MMU2_NO_TOOL 99
 
   #else

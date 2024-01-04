@@ -1,5 +1,5 @@
 #include <avr/pgmspace.h>
-#include "eeprom.h"
+// #include "eeprom.h"
 #include "src/MarlinCore.h"
 #include "src/core/language.h"
 #include "src/gcode/gcode.h"
@@ -24,6 +24,20 @@
 
 
 namespace MMU2 {
+
+OperationStatistics operation_statistics;
+
+uint16_t OperationStatistics::fail_total_num;       // total failures
+uint8_t  OperationStatistics::fail_num;             // fails during print
+uint16_t OperationStatistics::load_fail_total_num;  // total load failures
+uint8_t  OperationStatistics::load_fail_num;        // load failures during print
+uint32_t OperationStatistics::tool_change_counter;  // number of total tool changes
+int OperationStatistics::fail_total_num_addr;       // total failures EEPROM addr
+int OperationStatistics::fail_num_addr;             // fails during print EEPROM addr
+int OperationStatistics::load_fail_total_num_addr;  // total load failures EEPROM addr
+int OperationStatistics::load_fail_num_addr;        // load failures during print EEPROM addr
+int OperationStatistics::tool_change_counter_addr;  // number of total tool changes EEPROM addr
+
 
 void BeginReport(CommandInProgress /*cip*/, ProgressCode ec) {
     // custom_message_type = CustomMsg::MMUProgress;
@@ -352,7 +366,7 @@ void ReportErrorHook(CommandInProgress /*cip*/, ErrorCode ec, uint8_t /*es*/) {
         }
         return; // Always return to loop() to let MMU trigger a call to ReportErrorHook again
     } else if ((uint8_t)ReportErrorHookState == (uint8_t)ReportErrorHookStates::DISMISS_ERROR_SCREEN) {
-        ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_REDRAW_NOW;
+        ui.lcdDrawUpdate = LCDViewAction::LCDVIEW_CALL_REDRAW_NEXT;
         ui.return_to_status();
         sound_wait_for_user_reset();
         // Reset the state in case a new error is reported
@@ -417,28 +431,61 @@ void TryLoadUnloadReporter::DumpToSerial(){
 
 /// Disables MMU in EEPROM
 void DisableMMUInSettings() {
-    // TODO: I need Marlin developers' supervision here
-    // eeprom_update_byte((uint8_t *)EEPROM_MMU_ENABLED, false);
-    // eeprom_write_byte((uint8_t *)EEPROM_MMU_ENABLED, false);
+    mmu2.mmu_hw_enabled = false;
+
+    // save mmu_hw_enabled to eeprom
+    persistentStore.access_start();
+    persistentStore.write_data(mmu2.mmu_hw_enabled_addr, mmu2.mmu_hw_enabled);
+    persistentStore.access_finish();
+    settings.save();
+
     mmu2.Status();
 }
 
 void IncrementLoadFails(){
-    // TODO: I need Marlin developers' supervision here
-    // eeprom_increment_byte((uint8_t *)EEPROM_MMU_LOAD_FAIL);
-    // eeprom_increment_word((uint16_t *)EEPROM_MMU_LOAD_FAIL_TOT);
+    operation_statistics.load_fail_num += 1;
+    operation_statistics.load_fail_total_num += 1;
+
+    // save load_fail_num to eeprom
+    persistentStore.access_start();
+    persistentStore.write_data(
+        operation_statistics.load_fail_num_addr,
+        operation_statistics.load_fail_num
+    );
+
+    // save load_fail_total_num to eeprom
+    persistentStore.write_data(
+        operation_statistics.load_fail_total_num_addr,
+        operation_statistics.load_fail_total_num
+    );
+    persistentStore.access_finish();
+    settings.save();
+
 }
 
 void IncrementMMUFails(){
-    // TODO: I need Marlin developers' supervision here
-    // eeprom_increment_byte((uint8_t *)EEPROM_MMU_FAIL);
-    // eeprom_increment_word((uint16_t *)EEPROM_MMU_FAIL_TOT);
+    operation_statistics.fail_num += 1;
+    operation_statistics.fail_total_num += 1;
+
+    SERIAL_ECHOLN(operation_statistics.fail_num);
+
+    // save fail_num to eeprom
+    persistentStore.access_start();
+    persistentStore.write_data(
+        operation_statistics.fail_num_addr,
+        operation_statistics.fail_num
+    );
+    // save fail_total_num to eeprom
+    persistentStore.write_data(
+        operation_statistics.fail_total_num_addr,
+        operation_statistics.fail_total_num
+    );
+    persistentStore.access_finish();
+    settings.save();
 }
 
 bool cutter_enabled(){
-    // TODO: I need Marlin developers' supervision here
-    // return eeprom_read_byte((uint8_t*)EEPROM_MMU_CUTTER_ENABLED) == EEPROM_MMU_CUTTER_ENABLED_enabled;
-    return true;
+    return mmu2.cutter_mode > 0;
 }
 
 void MakeSound(SoundType s){
