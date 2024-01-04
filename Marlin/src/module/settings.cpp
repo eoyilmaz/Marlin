@@ -4045,15 +4045,15 @@ void MarlinSettings::reset() {
       CONFIG_ECHO_HEADING("MMU3 Operational Stats");
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("MMU                 : ");
+      SERIAL_ECHOPGM("MMU                ");
       serialprintln_onoff(MMU2::mmu2.mmu_hw_enabled);
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("Stealth Mode        : ");
+      SERIAL_ECHOPGM("Stealth Mode       ");
       serialprintln_onoff(MMU2::mmu2.stealth_mode);
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("Cutter              : ");
+      SERIAL_ECHOPGM("Cutter             ");
       #ifdef MMU_HAS_CUTTER
         if(MMU2::mmu2.cutter_mode == 0){
           serialprintln_onoff(false);
@@ -4065,31 +4065,31 @@ void MarlinSettings::reset() {
       #endif
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("SpoolJoin           : ");
+      SERIAL_ECHOPGM("SpoolJoin          ");
       serialprintln_onoff(SpoolJoin::spooljoin.enabled);
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("Tool Changes (Total): ");
+      SERIAL_ECHOPGM("Tool Changes       ");
       SERIAL_ECHOLN(MMU2::operation_statistics.tool_change_counter);
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("Fails (Total)       : ");
-      SERIAL_ECHOLN(MMU2::operation_statistics.fail_total_num);
-
-      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("Fails (Current)     : ");
+      SERIAL_ECHOPGM("Fails              ");
       SERIAL_ECHOLN(MMU2::operation_statistics.fail_num);
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("Load Fails (Total)  : ");
-      SERIAL_ECHOLN(MMU2::operation_statistics.load_fail_total_num);
+      SERIAL_ECHOPGM("Total Fails        ");
+      SERIAL_ECHOLN(MMU2::operation_statistics.fail_total_num);
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("Load Fails (Current): ");
+      SERIAL_ECHOPGM("Load Fails         ");
       SERIAL_ECHOLN(MMU2::operation_statistics.load_fail_num);
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
-      SERIAL_ECHOPGM("Power Fails         : ");
+      SERIAL_ECHOPGM("Total Load Fails   ");
+      SERIAL_ECHOLN(MMU2::operation_statistics.load_fail_total_num);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Power Fails        ");
       SERIAL_ECHOLN(MMU2::mmu2.TMCFailures());
 
     #endif
