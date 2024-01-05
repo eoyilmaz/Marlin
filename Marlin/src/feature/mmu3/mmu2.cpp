@@ -5,6 +5,7 @@
 #include "src/module/planner.h"
 #include "src/module/motion.h"
 #include "src/gcode/queue.h"
+#include "src/feature/runout.h"
 #if HAS_LEVELING
     #include "src/feature/bedlevel/bedlevel.h"
 #endif
@@ -224,23 +225,67 @@ void __attribute__((noinline)) MMU2::mmu_loop_inner(bool reportErrors) {
     CheckErrorScreenUserInput();
 }
 
+
+/**
+ * Check if there are extruder moves planned ahead.
+ * 
+ * TODO: This should go to the planner, but for now keep it here!
+*/
+bool MMU2::e_active()
+{
+  unsigned char e_active = 0;
+  block_t *block;
+  if(planner.block_buffer_tail != planner.block_buffer_head)
+  {
+    uint8_t block_index = planner.block_buffer_tail;
+    while(block_index != planner.block_buffer_head)
+    {
+      block = &planner.block_buffer[block_index];
+      if(block->steps[E_AXIS] != 0) e_active++;
+      block_index = (block_index+1) & (BLOCK_BUFFER_SIZE - 1);
+    }
+  }
+  return (e_active > 0) ? true : false ;
+}
+
+/**
+ * Trigger an M600 or the SpoolJoin feature if the FINDA cannot detect any
+ * filament during the print.
+ * 
+ * In case of SpoolJoin feature is triggered, Marlin's implementation is a
+ * little different than Prusa's, as we are completely consuming the filament
+ * before switching to the next slot. There will be a little bit of filament
+ * left when the new filament is extruded SpoolJoin is not intended to be used with
+ * multi color/material prints so this should be fine.
+*/
 void MMU2::CheckFINDARunout() {
     if (!FindaDetectsFilament()
-        && printJobOngoing()
+        // && printJobOngoing()
         && parser.codenum != 600
-        && printingIsPaused()
         #if HAS_LEVELING
-            && leveling_is_valid()
+            && planner.leveling_active
         #endif
         && all_axes_homed()
-        && axis_is_trusted(AxisEnum::E_AXIS)
-    ) {
+        && e_active()
+        #if ENABLED(MMU_SPOOL_JOIN_CONSUMES_ALL_FILAMENT)
+        && runout.enabled  // to prevent M600 to be triggered during M600 AUTO
+        && !FILAMENT_PRESENT()  // so the filament is totally consumed
+        #endif
+    ){
         SERIAL_ECHOLN_P("FINDA filament runout!");
-        marlin_stop_and_save_print_to_ram();
-        resume_print();
         if (SpoolJoin::spooljoin.isSpoolJoinEnabled() && get_current_tool() != (uint8_t)FILAMENT_UNKNOWN){ // Can't auto if F=?
+            #if ENABLED(MMU_SPOOL_JOIN_CONSUMES_ALL_FILAMENT)
+                // set the current tool to FILAMENT_UNKNOWN so that we don't try to unload it
+                extruder = MMU2_NO_TOOL;
+                // disable the filament runout sensor (this is going to be re-enabled after the filament is loaded)
+                runout.reset();
+                runout.filament_ran_out = false;  // trying to disable the purge more / continue message
+                runout.enabled = false;
+            #endif
             queue.enqueue_now_P(PSTR("M600 AUTO"));  // save print and run M600 command
         } else {
+            marlin_stop_and_save_print_to_ram();
+            resume_print();
             queue.enqueue_now_P(MSG_M600);// save print and run M600 command
         }
     }
@@ -399,7 +444,6 @@ void MMU2::ToolChangeCommon(uint8_t slot) {
     );
     persistentStore.access_finish();
     settings.save();
-
 }
 
 bool MMU2::tool_change(uint8_t slot) {

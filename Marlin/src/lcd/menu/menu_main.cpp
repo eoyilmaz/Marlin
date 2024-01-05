@@ -353,7 +353,10 @@ void menu_main() {
   #endif
 
   #if ENABLED(MMU2_MENUS)
-    if (!busy) SUBMENU(MSG_MMU2_MENU, menu_mmu2);
+    #if HAS_PRUSA_MMU2
+      if (!busy) // MMU3 can show print stats which can be useful during the print
+    #endif
+      SUBMENU(MSG_MMU2_MENU, menu_mmu2);
   #endif
 
   SUBMENU(MSG_CONFIGURATION, menu_configuration);

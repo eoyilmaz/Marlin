@@ -197,9 +197,9 @@ void menu_mmu2_fail_stas_total(){
 void menu_mmu2_toolchange_stat_total(){
   if (ui.use_click()) return ui.go_back();
   char buffer[LCD_WIDTH];
+  sprintf_P(buffer, PSTR("%u"), MMU2::operation_statistics.tool_change_counter);
   START_SCREEN();
   STATIC_ITEM(MSG_MMU_MATERIAL_CHANGES, SS_INVERT);
-  sprintf_P(buffer, PSTR("%u"), MMU2::operation_statistics.fail_total_num);
   STATIC_ITEM_F(nullptr, SS_FULL, buffer);
   END_SCREEN();
 }
@@ -232,27 +232,36 @@ void action_mmu2_reset() {
 }
 
 void menu_mmu2() {
+  const bool busy = printingIsActive()
+    #if HAS_MEDIA
+      , card_detected = card.isMounted()
+      , card_open = card_detected && card.isFileOpen()
+    #endif
+  ;
+
   START_MENU();
   BACK_ITEM(MSG_MAIN_MENU);
-  SUBMENU(MSG_MMU2_LOAD_FILAMENT, menu_mmu2_load_filament);
-  SUBMENU(MSG_MMU2_LOAD_TO_NOZZLE, menu_mmu2_load_to_nozzle);
-  SUBMENU(MSG_MMU2_EJECT_FILAMENT, menu_mmu2_eject_filament);
-  ACTION_ITEM(MSG_MMU2_UNLOAD_FILAMENT, action_mmu2_unload_filament);
+  if (!busy){
+    
+    SUBMENU(MSG_MMU2_LOAD_FILAMENT, menu_mmu2_load_filament);
+    SUBMENU(MSG_MMU2_LOAD_TO_NOZZLE, menu_mmu2_load_to_nozzle);
+    SUBMENU(MSG_MMU2_EJECT_FILAMENT, menu_mmu2_eject_filament);
+    ACTION_ITEM(MSG_MMU2_UNLOAD_FILAMENT, action_mmu2_unload_filament);
+  }
 
   #if HAS_PRUSA_MMU3
-  // SUBMENU(MSG_MMU_CUTTER_MODE, menu_mmu2_cutter);
-  bool cutter_enabled = MMU2::mmu2.cutter_mode != 0;
-  editable.state = cutter_enabled;
-  EDIT_ITEM(bool, MSG_MMU_CUTTER, &cutter_enabled, []{
-    menu_mmu2_cutter_set_mode((uint8_t)!editable.state);
-  });
-  if (MMU2::cutter_enabled()){
-    SUBMENU(MSG_MMU2_CUT_FILAMENT, menu_mmu2_cut_filament);
-  }
-  EDIT_ITEM(bool, MSG_MMU_SPOOL_JOIN, &SpoolJoin::spooljoin.enabled, spool_join_status);
+    // SUBMENU(MSG_MMU_CUTTER_MODE, menu_mmu2_cutter);
+    bool cutter_enabled = MMU2::mmu2.cutter_mode != 0;
+    editable.state = cutter_enabled;
+    EDIT_ITEM(bool, MSG_MMU_CUTTER, &cutter_enabled, []{
+      menu_mmu2_cutter_set_mode((uint8_t)!editable.state);
+    });
+    if (!busy && MMU2::cutter_enabled()){
+      SUBMENU(MSG_MMU2_CUT_FILAMENT, menu_mmu2_cut_filament);
+    }
+    EDIT_ITEM(bool, MSG_MMU_SPOOL_JOIN, &SpoolJoin::spooljoin.enabled, spool_join_status);
 
-  SUBMENU(MSG_MMU_FAIL_STATS, menu_mmu2_fail_stats);
-
+    SUBMENU(MSG_MMU_FAIL_STATS, menu_mmu2_fail_stats);
   #endif
 
   ACTION_ITEM(MSG_MMU2_RESET, action_mmu2_reset);
@@ -310,16 +319,17 @@ void menu_mmu2_pause() {
 }
 
 void mmu2_M600(bool automatic) {
-  // uint8_t slot;
-  // if (automatic) {
-  //   slot = SpoolJoin::spooljoin.nextSlot();
-  //   MMU2::mmu2.load_filament_to_nozzle(slot);
-  // } else {
+  uint8_t slot;
+  // Disable automatic switching if MMU3 is not enabled or spool join is disabled
+  if(TERN0(HAS_PRUSA_MMU3, automatic && SpoolJoin::spooljoin.enabled)){
+    slot = SpoolJoin::spooljoin.nextSlot();
+    MMU2::mmu2.load_filament_to_nozzle(slot);
+  } else {
     ui.defer_status_screen();
     ui.goto_screen(menu_mmu2_pause);
     wait_for_mmu_menu = true;
     while (wait_for_mmu_menu) idle();
-  // }
+  }
 }
 
 uint8_t mmu2_choose_filament() {

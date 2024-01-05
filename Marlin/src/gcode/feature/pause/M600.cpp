@@ -169,12 +169,11 @@ void GcodeSuite::M600() {
         parser.celsiusval('R')
         DXC_PASS
       );
-    }
-    else {
+    } else {
       #if ENABLED(MMU2_MENUS)
-        // mmu2_M600(parser.seenval('AUTO'));
-        mmu2_M600(false);
-        resume_print(0, 0, 0, beep_count, 0 DXC_PASS);
+        bool automatic = strcmp_P(parser.string_arg, "AUTO") == 0;
+        mmu2_M600(automatic);
+        resume_print(0, 0, 0, beep_count, 0, !automatic, false DXC_PASS);
       #endif
     }
   }

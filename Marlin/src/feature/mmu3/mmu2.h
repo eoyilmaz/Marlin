@@ -256,6 +256,7 @@ public:
                                     // EEPROM
     static int mmu_hw_enabled_addr; // EEPROM addr for mmu_hw_enabled
 
+    bool e_active();
 #ifndef UNITTEST
 private:
 #endif

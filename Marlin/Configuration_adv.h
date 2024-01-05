@@ -4481,6 +4481,24 @@
     //#define MMU_FORCE_STEALTH_MODE // When defined forces the stealth mode and disables menu item
     #define MMU2_NO_TOOL 99
 
+    /**
+     * SpoolJoin Consumes All Filament -- EXPERIMENTAL
+     * 
+     * SpoolJoin normally triggers when FINDA sensor untriggers while printing.
+     * This is the default behaviour and it doesn't consume all the filament
+     * before triggering a filament change. This leaves some filament in the
+     * current slot and before switching to the next slot it is unloaded.
+     * 
+     * Enabling this option will trigger the filament change when both FINDA
+     * and Filament Runout Sensor triggers during the print and it allows the
+     * filament in the current slot to be completely consumed before doing the
+     * filament change. But this can cause problems as a little bit of filament
+     * will be left between the extruder gears (thinking that the filament
+     * sensor is triggered through the gears) and the end of the PTFE tube and
+     * can cause filament load issues.
+     */
+    #define MMU_SPOOL_JOIN_CONSUMES_ALL_FILAMENT
+
   #else
 
     /**
