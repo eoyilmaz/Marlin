@@ -743,10 +743,14 @@ namespace LanguageNarrow_en {
   LSTR MSG_MMU_STEALTH                    = _UxGT("Stealth Mode");
 
   LSTR MSG_MMU_FAIL_STATS                 = _UxGT("Fail stats");
+  LSTR MSG_MMU_STATISTICS                 = _UxGT("Statistics");
+  LSTR MSG_MMU_RESET_STATS                = _UxGT("Reset Stats");
   LSTR MSG_MMU_LAST_PRINT                 = _UxGT("Last print");
   LSTR MSG_MMU_LAST_PRINT_FAILURES        = _UxGT("Last print failures");
   LSTR MSG_MMU_TOTAL                      = _UxGT("Total");
   LSTR MSG_MMU_TOTAL_FAILURES             = _UxGT("Total failures");
+  LSTR MSG_MMU_DEV_INCREMENT_FAILS        = _UxGT("Increment fails");
+  LSTR MSG_MMU_DEV_INCREMENT_LOAD_FAILS   = _UxGT("Increment load fails");
   LSTR MSG_MMU_FAILS                      = _UxGT("MMU fails");
   LSTR MSG_MMU_LOAD_FAILS                 = _UxGT("MMU load fails");
   LSTR MSG_MMU_POWER_FAILS                = _UxGT("MMU power fails");

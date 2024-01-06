@@ -231,6 +231,7 @@
 
 #if HAS_PRUSA_MMU3
   #include "feature/mmu3/mmu2.h"
+  #include "feature/mmu3/mmu2_reporting.h"
   #include "feature/mmu3/SpoolJoin.h"
 #elif HAS_PRUSA_MMU2
   #include "feature/mmu/mmu2.h"
@@ -358,6 +359,7 @@ void startOrResumeJob() {
     TERN_(CANCEL_OBJECTS, cancelable.reset());
     TERN_(LCD_SHOW_E_TOTAL, e_move_accumulator = 0);
     TERN_(SET_REMAINING_TIME, ui.reset_remaining_time());
+    TERN_(HAS_PRUSA_MMU3, MMU2::operation_statistics.reset_per_print_stats());
   }
   print_job_timer.start();
 }

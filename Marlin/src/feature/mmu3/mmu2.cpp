@@ -434,16 +434,7 @@ void MMU2::ToolChangeCommon(uint8_t slot) {
     ++toolchange_counter;
 
     // also increment the total number of tool changes
-    operation_statistics.tool_change_counter += 1;
-
-    // save tool_change_counter to eeprom
-    persistentStore.access_start();
-    persistentStore.write_data(
-        operation_statistics.tool_change_counter_addr,
-        operation_statistics.tool_change_counter
-    );
-    persistentStore.access_finish();
-    settings.save();
+    operation_statistics.increment_tool_change_counter();
 }
 
 bool MMU2::tool_change(uint8_t slot) {

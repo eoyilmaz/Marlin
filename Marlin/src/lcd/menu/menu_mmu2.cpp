@@ -193,24 +193,51 @@ void menu_mmu2_fail_stas_total(){
   END_SCREEN();
 }
 
+#ifdef MARLIN_DEV_MODE
+void menu_mmu2_dev_increment_fail_stat(){
+  MMU2::operation_statistics.increment_mmu_fails();
+}
+
+void menu_mmu2_dev_increment_load_fail_stat(){
+  MMU2::operation_statistics.increment_load_fails();
+}
+#endif
+
+static void mmu2_reset_stats(){
+  bool result = MMU2::operation_statistics.reset_stats();
+  MarlinUI::completion_feedback(result);
+}
 
 void menu_mmu2_toolchange_stat_total(){
   if (ui.use_click()) return ui.go_back();
-  char buffer[LCD_WIDTH];
-  sprintf_P(buffer, PSTR("%u"), MMU2::operation_statistics.tool_change_counter);
+  char buffer1[LCD_WIDTH];
+  sprintf_P(buffer1, PSTR("%u"), MMU2::operation_statistics.tool_change_counter);
+
+  char buffer2[LCD_WIDTH];
+  sprintf_P(buffer2, PSTR("%u"), MMU2::operation_statistics.tool_change_total_counter);
+
   START_SCREEN();
   STATIC_ITEM(MSG_MMU_MATERIAL_CHANGES, SS_INVERT);
-  STATIC_ITEM_F(nullptr, SS_FULL, buffer);
+  PSTRING_ITEM(MSG_MMU_LAST_PRINT, buffer1, SS_FULL);
+  PSTRING_ITEM(MSG_MMU_TOTAL, buffer2, SS_FULL);
   END_SCREEN();
 }
 
-
-void menu_mmu2_fail_stats() {
+void menu_mmu2_statistics() {
   START_MENU();
   BACK_ITEM(MSG_MMU2_MENU);
+  #ifdef MARLIN_DEV_MODE
+    ACTION_ITEM(MSG_MMU_DEV_INCREMENT_FAILS, menu_mmu2_dev_increment_fail_stat);
+    ACTION_ITEM(MSG_MMU_DEV_INCREMENT_LOAD_FAILS, menu_mmu2_dev_increment_load_fail_stat);
+  #endif
   SUBMENU(MSG_MMU_LAST_PRINT, menu_mmu2_fail_stats_last_print);
   SUBMENU(MSG_MMU_TOTAL, menu_mmu2_fail_stas_total);
   SUBMENU(MSG_MMU_MATERIAL_CHANGES, menu_mmu2_toolchange_stat_total);
+  CONFIRM_ITEM(MSG_MMU_RESET_STATS,
+    MSG_BUTTON_RESET, MSG_BUTTON_CANCEL,
+    mmu2_reset_stats, nullptr,
+    GET_TEXT_F(MSG_MMU_RESET_STATS), (const char *)nullptr, F("?")
+  );
   END_MENU();
 }
 
@@ -261,7 +288,7 @@ void menu_mmu2() {
     }
     EDIT_ITEM(bool, MSG_MMU_SPOOL_JOIN, &SpoolJoin::spooljoin.enabled, spool_join_status);
 
-    SUBMENU(MSG_MMU_FAIL_STATS, menu_mmu2_fail_stats);
+    SUBMENU(MSG_MMU_STATISTICS, menu_mmu2_statistics);
   #endif
 
   ACTION_ITEM(MSG_MMU2_RESET, action_mmu2_reset);

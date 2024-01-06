@@ -656,7 +656,8 @@ typedef struct SettingsDataStruct {
     uint8_t fail_num;             // EEPROM_MMU_FAIL
     uint16_t load_fail_total_num; // EEPROM_MMU_LOAD_FAIL_TOT
     uint8_t load_fail_num;        // EEPROM_MMU_LOAD_FAIL
-    uint32_t tool_change_counter; // EEPROM_MMU_MATERIAL_CHANGES
+    uint16_t tool_change_counter;
+    uint32_t tool_change_total_counter; // EEPROM_MMU_MATERIAL_CHANGES
     uint8_t cutter_mode;          // EEPROM_MMU_CUTTER_ENABLED
     uint8_t stealth_mode;         // EEPROM_MMU_STEALTH
     bool mmu_hw_enabled;          // EEPROM_MMU_ENABLED
@@ -1775,7 +1776,8 @@ void MarlinSettings::postprocess() {
       EEPROM_WRITE(MMU2::operation_statistics.fail_num); // EEPROM_MMU_FAIL
       EEPROM_WRITE(MMU2::operation_statistics.load_fail_total_num); // EEPROM_MMU_LOAD_FAIL_TOT
       EEPROM_WRITE(MMU2::operation_statistics.load_fail_num); // EEPROM_MMU_LOAD_FAIL
-      EEPROM_WRITE(MMU2::operation_statistics.tool_change_counter); // EEPROM_MMU_MATERIAL_CHANGES
+      EEPROM_WRITE(MMU2::operation_statistics.tool_change_counter);
+      EEPROM_WRITE(MMU2::operation_statistics.tool_change_total_counter); // EEPROM_MMU_MATERIAL_CHANGES
       EEPROM_WRITE(MMU2::mmu2.cutter_mode); // EEPROM_MMU_CUTTER_ENABLED
       EEPROM_WRITE(MMU2::mmu2.stealth_mode); // EEPROM_MMU_STEALTH
       EEPROM_WRITE(MMU2::mmu2.mmu_hw_enabled); // EEPROM_MMU_ENABLED
@@ -2882,7 +2884,10 @@ void MarlinSettings::postprocess() {
         EEPROM_READ(MMU2::operation_statistics.load_fail_num); // EEPROM_MMU_LOAD_FAIL
 
         MMU2::operation_statistics.tool_change_counter_addr = eeprom_index;
-        EEPROM_READ(MMU2::operation_statistics.tool_change_counter); // EEPROM_MMU_MATERIAL_CHANGES
+        EEPROM_READ(MMU2::operation_statistics.tool_change_counter);
+
+        MMU2::operation_statistics.tool_change_total_counter_addr = eeprom_index;
+        EEPROM_READ(MMU2::operation_statistics.tool_change_total_counter); // EEPROM_MMU_MATERIAL_CHANGES
 
         MMU2::mmu2.cutter_mode_addr = eeprom_index;
         EEPROM_READ(MMU2::mmu2.cutter_mode); // EEPROM_MMU_CUTTER_ENABLED
@@ -3710,11 +3715,7 @@ void MarlinSettings::reset() {
   //
   #if HAS_PRUSA_MMU3
       SpoolJoin::spooljoin.enabled = false;
-      MMU2::operation_statistics.fail_total_num = 0;
-      MMU2::operation_statistics.fail_num = 0;
-      MMU2::operation_statistics.load_fail_total_num = 0;
-      MMU2::operation_statistics.load_fail_num = 0;
-      MMU2::operation_statistics.tool_change_counter = 0;
+      MMU2::operation_statistics.reset_stats();
       MMU2::mmu2.cutter_mode = 0;
       MMU2::mmu2.stealth_mode = 0;
       MMU2::mmu2.mmu_hw_enabled = true;
@@ -4071,6 +4072,10 @@ void MarlinSettings::reset() {
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
       SERIAL_ECHOPGM("Tool Changes       ");
       SERIAL_ECHOLN(MMU2::operation_statistics.tool_change_counter);
+
+      CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
+      SERIAL_ECHOPGM("Total Tool Changes ");
+      SERIAL_ECHOLN(MMU2::operation_statistics.tool_change_total_counter);
 
       CONFIG_ECHO_START(); SERIAL_ECHO_SP(2);
       SERIAL_ECHOPGM("Fails              ");

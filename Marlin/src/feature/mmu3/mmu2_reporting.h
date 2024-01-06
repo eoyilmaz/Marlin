@@ -27,16 +27,25 @@ enum CommandInProgress : uint8_t {
 */
 class OperationStatistics {
 public:
-    static uint16_t fail_total_num;           // total failures
-    static uint8_t  fail_num;                 // fails during print
-    static uint16_t load_fail_total_num;      // total load failures
-    static uint8_t  load_fail_num;            // load failures during print
-    static uint32_t tool_change_counter;      // number of total tool changes
-    static int      fail_total_num_addr;      // total failures EEPROM addr
-    static int      fail_num_addr;            // fails during print EEPROM addr
-    static int      load_fail_total_num_addr; // total load failures EEPROM addr
-    static int      load_fail_num_addr;       // load failures during print EEPROM addr
-    static int      tool_change_counter_addr; // number of total tool changes EEPROM addr
+
+    void increment_load_fails();
+    void increment_mmu_fails();
+    void increment_tool_change_counter();
+    bool reset_per_print_stats(); // Reset only the per print stats.
+    bool reset_stats();  // Reset MMU stats and update EEPROM
+
+    static uint16_t fail_total_num;                 // total failures
+    static uint8_t  fail_num;                       // fails during print
+    static uint16_t load_fail_total_num;            // total load failures
+    static uint8_t  load_fail_num;                  // load failures during print
+    static uint16_t tool_change_counter;            // number of tool changes during print
+    static uint32_t tool_change_total_counter;      // number of total tool changes
+    static int      fail_total_num_addr;            // total failures EEPROM addr
+    static int      fail_num_addr;                  // fails during print EEPROM addr
+    static int      load_fail_total_num_addr;       // total load failures EEPROM addr
+    static int      load_fail_num_addr;             // load failures during print EEPROM addr
+    static int      tool_change_counter_addr;       // number of tool changes EEPROM addr
+    static int      tool_change_total_counter_addr; // number of total tool changes EEPROM addr
 };
 
 extern OperationStatistics operation_statistics;

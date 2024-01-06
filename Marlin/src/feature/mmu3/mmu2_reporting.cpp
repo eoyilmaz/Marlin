@@ -31,12 +31,111 @@ uint16_t OperationStatistics::fail_total_num;       // total failures
 uint8_t  OperationStatistics::fail_num;             // fails during print
 uint16_t OperationStatistics::load_fail_total_num;  // total load failures
 uint8_t  OperationStatistics::load_fail_num;        // load failures during print
-uint32_t OperationStatistics::tool_change_counter;  // number of total tool changes
+uint16_t OperationStatistics::tool_change_counter;  // number of tool changes per print
+uint32_t OperationStatistics::tool_change_total_counter;  // number of total tool changes
 int OperationStatistics::fail_total_num_addr;       // total failures EEPROM addr
 int OperationStatistics::fail_num_addr;             // fails during print EEPROM addr
 int OperationStatistics::load_fail_total_num_addr;  // total load failures EEPROM addr
 int OperationStatistics::load_fail_num_addr;        // load failures during print EEPROM addr
 int OperationStatistics::tool_change_counter_addr;  // number of total tool changes EEPROM addr
+int OperationStatistics::tool_change_total_counter_addr;  // number of total tool changes EEPROM addr
+
+/**
+ * Increment both the total load fails and Per print job load fails.
+*/
+void OperationStatistics::increment_load_fails(){
+    load_fail_num += 1;
+    load_fail_total_num += 1;
+
+    // save load_fail_num to eeprom
+    persistentStore.access_start();
+    persistentStore.write_data(load_fail_num_addr, load_fail_num);
+
+    // save load_fail_total_num to eeprom
+    persistentStore.write_data(load_fail_total_num_addr, load_fail_total_num);
+    persistentStore.access_finish();
+    settings.save();
+}
+
+/**
+ * Increment both the total fails and the per print job fails.
+*/
+void OperationStatistics::increment_mmu_fails(){
+    fail_num += 1;
+    fail_total_num += 1;
+
+    SERIAL_ECHOLN(fail_num);
+
+    // save fail_num to eeprom
+    persistentStore.access_start();
+    persistentStore.write_data(fail_num_addr, fail_num);
+    // save fail_total_num to eeprom
+    persistentStore.write_data(fail_total_num_addr, fail_total_num);
+    persistentStore.access_finish();
+    settings.save();
+}
+
+/**
+ * Increment tool change counter
+*/
+void OperationStatistics::increment_tool_change_counter(){
+    tool_change_counter += 1;
+    tool_change_total_counter += 1;
+
+    // save tool_change_total_counter to eeprom
+    persistentStore.access_start();
+    persistentStore.write_data(tool_change_total_counter_addr, tool_change_total_counter);
+    persistentStore.access_finish();
+    settings.save();
+}
+
+
+/**
+ * Reset only per print operation statistics and update EEPROM.
+ * 
+ * @returns true if everything went okay, false otherwise.
+*/
+bool OperationStatistics::reset_per_print_stats(){
+    // Update data
+    load_fail_num = 0;
+    fail_num = 0;
+    tool_change_counter = 0;
+
+    // Update EEPROM
+    persistentStore.access_start();
+    persistentStore.write_data(load_fail_num_addr, load_fail_num);
+    persistentStore.write_data(fail_num_addr, fail_num);
+    persistentStore.write_data(tool_change_counter_addr, tool_change_counter);
+    persistentStore.access_finish();
+    return settings.save();
+}
+
+
+/**
+ * Reset all operation statistics and update EEPROM.
+ * 
+ * @returns true if everything went okay, false otherwise.
+*/
+bool OperationStatistics::reset_stats(){
+    // Update data
+    load_fail_num = 0;
+    load_fail_total_num = 0;
+    fail_num = 0;
+    fail_total_num = 0;
+    tool_change_counter = 0;
+    tool_change_total_counter = 0;
+
+    // Update EEPROM
+    persistentStore.access_start();
+    persistentStore.write_data(load_fail_num_addr, load_fail_num);
+    persistentStore.write_data(load_fail_total_num_addr, load_fail_total_num);
+    persistentStore.write_data(fail_num_addr, fail_num);
+    persistentStore.write_data(fail_total_num_addr, fail_total_num);
+    persistentStore.write_data(tool_change_counter_addr, tool_change_counter);
+    persistentStore.write_data(tool_change_total_counter_addr, tool_change_total_counter);
+    persistentStore.access_finish();
+    return settings.save();
+}
 
 
 void BeginReport(CommandInProgress /*cip*/, ProgressCode ec) {
@@ -443,45 +542,11 @@ void DisableMMUInSettings() {
 }
 
 void IncrementLoadFails(){
-    operation_statistics.load_fail_num += 1;
-    operation_statistics.load_fail_total_num += 1;
-
-    // save load_fail_num to eeprom
-    persistentStore.access_start();
-    persistentStore.write_data(
-        operation_statistics.load_fail_num_addr,
-        operation_statistics.load_fail_num
-    );
-
-    // save load_fail_total_num to eeprom
-    persistentStore.write_data(
-        operation_statistics.load_fail_total_num_addr,
-        operation_statistics.load_fail_total_num
-    );
-    persistentStore.access_finish();
-    settings.save();
-
+    operation_statistics.increment_load_fails();
 }
 
 void IncrementMMUFails(){
-    operation_statistics.fail_num += 1;
-    operation_statistics.fail_total_num += 1;
-
-    SERIAL_ECHOLN(operation_statistics.fail_num);
-
-    // save fail_num to eeprom
-    persistentStore.access_start();
-    persistentStore.write_data(
-        operation_statistics.fail_num_addr,
-        operation_statistics.fail_num
-    );
-    // save fail_total_num to eeprom
-    persistentStore.write_data(
-        operation_statistics.fail_total_num_addr,
-        operation_statistics.fail_total_num
-    );
-    persistentStore.access_finish();
-    settings.save();
+    operation_statistics.increment_mmu_fails();
 }
 
 bool cutter_enabled(){
